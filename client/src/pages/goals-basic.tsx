@@ -26,7 +26,7 @@ export default function Goals() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: goals = [], isLoading } = useQuery({
+  const { data: goals = [], isLoading } = useQuery<Goal[]>({
     queryKey: ['/api/goals'],
   });
 
@@ -70,7 +70,7 @@ export default function Goals() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       targetAmount: formData.get('targetAmount') as string,
-      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : null,
+      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : undefined,
       category: formData.get('category') as string || 'savings',
       priority: formData.get('priority') as string || 'medium',
     };
