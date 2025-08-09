@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Sidebar from '@/components/layout/sidebar';
+import TopBar from '@/components/layout/topbar';
+import MobileNavigation from '@/components/layout/mobile-navigation';
 import { 
   BarChart3, 
   Brain, 
@@ -100,11 +103,27 @@ export default function Analytics() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Financial Analytics</h1>
-        <p className="text-muted-foreground">AI-powered insights and comprehensive financial analysis</p>
-      </div>
+    <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        
+        <main className="flex-1 overflow-auto">
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Analytics" subtitle="AI-powered insights and financial analytics" />
+          </div>
+          
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
+            <div className="hidden md:block">
+              <h1 className="text-3xl font-bold">Financial Analytics</h1>
+              <p className="text-muted-foreground">AI-powered insights and comprehensive financial analysis</p>
+            </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
@@ -394,6 +413,9 @@ export default function Analytics() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
+import MobileNavigation from "@/components/layout/mobile-navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,13 +129,22 @@ export default function Transactions() {
 
   return (
     <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
       <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
         <main className="flex-1 overflow-auto">
-          <TopBar title="Transactions" subtitle="View and manage all your financial transactions" />
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Transactions" subtitle="View and manage all your financial transactions" />
+          </div>
           
-          <div className="p-6">
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6">
             {/* Filters and Search */}
             <Card className="mb-6">
               <CardHeader>

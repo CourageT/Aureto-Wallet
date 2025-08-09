@@ -63,7 +63,7 @@ export default function Dashboard() {
             <TopBar title="Dashboard" subtitle="Welcome back! Here's your financial overview." />
           </div>
           
-          <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6 pt-20 md:pt-4 pb-24 md:pb-6">
             <StatsCards />
             
             {/* Mobile Quick Actions */}

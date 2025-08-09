@@ -34,7 +34,7 @@ export default function MobileNavigation() {
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Mobile Header - Always visible */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 mobile-header">
         <div className="flex items-center justify-between px-4 py-3 mobile-safe">
           <div className="flex items-center gap-2">
@@ -116,8 +116,8 @@ export default function MobileNavigation() {
         </div>
       </aside>
 
-      {/* Bottom Navigation for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 mobile-bottom">
+      {/* Bottom Navigation for Mobile - Always visible */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 mobile-bottom shadow-lg">
         <div className="flex justify-around py-2 mobile-safe">
           {navigationItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
@@ -126,8 +126,8 @@ export default function MobileNavigation() {
             return (
               <Link key={item.href} href={item.href}>
                 <div className={`
-                  flex flex-col items-center justify-center p-2 min-w-[60px] touch-friendly
-                  ${isActive ? 'text-blue-600' : 'text-gray-500'}
+                  flex flex-col items-center justify-center p-2 min-w-[60px] touch-friendly rounded-lg transition-colors
+                  ${isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
                 `}>
                   <Icon className="h-5 w-5" />
                   <span className="text-xs mt-1 font-medium">{item.label}</span>
@@ -138,9 +138,7 @@ export default function MobileNavigation() {
         </div>
       </div>
 
-      {/* Spacer for mobile layout */}
-      <div className="md:hidden h-16" /> {/* Top spacer */}
-      <div className="md:hidden h-20" /> {/* Bottom spacer */}
+
     </>
   );
 }

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Sidebar from '@/components/layout/sidebar';
+import TopBar from '@/components/layout/topbar';
+import MobileNavigation from '@/components/layout/mobile-navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -148,14 +151,30 @@ export default function Goals() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Financial Goals</h1>
-          <p className="text-muted-foreground">Track your progress towards financial milestones</p>
+    <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <main className="flex-1 overflow-auto">
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Goals" subtitle="Track your progress towards financial milestones" />
+          </div>
+          
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="hidden md:block">
+                <h1 className="text-3xl font-bold">Financial Goals</h1>
+                <p className="text-muted-foreground">Track your progress towards financial milestones</p>
+              </div>
+        
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -213,7 +232,7 @@ export default function Goals() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+            </div>
 
       {goals.length === 0 ? (
         <Card>
@@ -357,6 +376,9 @@ export default function Goals() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

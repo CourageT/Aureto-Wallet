@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
+import MobileNavigation from "@/components/layout/mobile-navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,13 +80,22 @@ export default function Wallets() {
 
   return (
     <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
       <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
         <main className="flex-1 overflow-auto">
-          <TopBar title="Wallets" subtitle="Manage your financial accounts and savings goals" />
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Wallets" subtitle="Manage your financial accounts and savings goals" />
+          </div>
           
-          <div className="p-6">
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Your Wallets</h3>
