@@ -8,7 +8,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Wallets from "@/pages/wallets";
 import Transactions from "@/pages/transactions";
-import Goals from "@/pages/goals";
+import Goals from "@/pages/goals-simple";
 import Analytics from "@/pages/analytics";
 import Reports from "@/pages/reports";
 import Team from "@/pages/team";
