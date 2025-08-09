@@ -2,7 +2,47 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="SpendWise Pro" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- iOS specific meta tags -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+    
+    <!-- Windows specific -->
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    
+    <!-- SEO and Social -->
+    <meta name="description" content="SpendWise Pro - Collaborative household expense tracking and financial management app" />
+    <meta name="keywords" content="expense tracking, budget, finance, household, collaborative, PWA" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="SpendWise Pro" />
+    <meta property="og:description" content="Collaborative household expense tracking and financial management" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SpendWise Pro" />
+    <meta name="twitter:description" content="Collaborative household expense tracking and financial management" />
+    <meta name="twitter:image" content="/icons/icon-512x512.png" />
+    
+    <title>SpendWise Pro - Expense Tracking</title>
+    
+    <!-- Prevent zoom on input focus (iOS) -->
+    <style>
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

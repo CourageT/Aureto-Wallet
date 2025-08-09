@@ -3,9 +3,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
+import MobileNavigation from "@/components/layout/mobile-navigation";
+import InstallPrompt from "@/components/ui/install-prompt";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RecentTransactions from "@/components/dashboard/recent-transactions";
 import QuickActions from "@/components/dashboard/quick-actions";
+import MobileQuickActions from "@/components/dashboard/mobile-quick-actions";
 import MonthlyBudget from "@/components/dashboard/monthly-budget";
 import WalletsOverview from "@/components/dashboard/wallets-overview";
 import TeamManagement from "@/components/dashboard/team-management";
@@ -44,29 +47,51 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      <Sidebar />
+    <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
       
-      <main className="flex-1 overflow-auto">
-        <TopBar title="Dashboard" subtitle="Welcome back! Here's your financial overview." />
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
-        <div className="p-6 space-y-6">
-          <StatsCards />
+        <main className="flex-1 overflow-auto">
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Dashboard" subtitle="Welcome back! Here's your financial overview." />
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <RecentTransactions />
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
+            <StatsCards />
+            
+            {/* Mobile Quick Actions */}
+            <MobileQuickActions />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="lg:col-span-2">
+                <RecentTransactions />
+              </div>
+              <div className="space-y-4 md:space-y-6">
+                {/* Desktop Quick Actions */}
+                <div className="hidden md:block">
+                  <QuickActions />
+                </div>
+                <MonthlyBudget />
+              </div>
             </div>
-            <div className="space-y-6">
-              <QuickActions />
-              <MonthlyBudget />
+
+            <WalletsOverview />
+            <div className="hidden md:block">
+              <TeamManagement />
             </div>
           </div>
-
-          <WalletsOverview />
-          <TeamManagement />
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+      
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
+    </>
   );
 }

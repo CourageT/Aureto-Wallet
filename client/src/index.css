@@ -4,6 +4,87 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-first responsive design */
+@layer base {
+  html {
+    font-size: 16px; /* Prevent zoom on iOS input focus */
+  }
+  
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Improve touch targets for mobile */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better mobile input styling */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    border-radius: 8px;
+  }
+
+  /* PWA-specific styles */
+  @media (display-mode: standalone) {
+    body {
+      /* Add safe area padding for devices with notches */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+}
+
+/* Mobile-optimized utilities */
+@layer utilities {
+  .touch-friendly {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .mobile-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .mobile-header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .mobile-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  /* Hide scrollbars on mobile for cleaner look */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile responsive sidebar */
+@media (max-width: 768px) {
+  .mobile-sidebar-backdrop {
+    @apply fixed inset-0 bg-black/50 z-40;
+  }
+  
+  .mobile-sidebar {
+    @apply fixed left-0 top-0 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50;
+  }
+  
+  .mobile-sidebar.closed {
+    @apply -translate-x-full;
+  }
+}
+
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);
