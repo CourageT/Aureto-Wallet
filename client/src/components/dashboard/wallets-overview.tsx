@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { Eye, Settings, Users, Wallet } from "lucide-react";
 import CreateWalletModal from "@/components/modals/create-wallet-modal";
+import WalletDetailsModal from "@/components/modals/wallet-details-modal";
 
 const getWalletIcon = (type: string) => {
   switch (type) {
@@ -34,6 +37,7 @@ const getRoleBadge = (role: string) => {
 
 export default function WalletsOverview() {
   const [isCreateWalletOpen, setIsCreateWalletOpen] = useState(false);
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   
   const { data: wallets, isLoading } = useQuery({
     queryKey: ["/api/wallets"],
@@ -130,10 +134,22 @@ export default function WalletsOverview() {
                       </div>
                     )}
                     <div className="flex space-x-2">
-                      <Button variant="ghost" className="flex-1 btn-secondary text-sm">
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 btn-secondary text-sm"
+                        onClick={() => {
+                          window.location.href = `/transactions?wallet=${wallet.id}`;
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
-                      <Button variant="ghost" className="flex-1 bg-primary-100 text-primary-700 hover:bg-primary-200 text-sm">
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 bg-primary-100 text-primary-700 hover:bg-primary-200 text-sm"
+                        onClick={() => setSelectedWalletId(wallet.id)}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
                         Manage
                       </Button>
                     </div>
@@ -149,6 +165,14 @@ export default function WalletsOverview() {
         isOpen={isCreateWalletOpen}
         onClose={() => setIsCreateWalletOpen(false)}
       />
+      
+      {selectedWalletId && (
+        <WalletDetailsModal
+          isOpen={!!selectedWalletId}
+          onClose={() => setSelectedWalletId(null)}
+          walletId={selectedWalletId}
+        />
+      )}
     </>
   );
 }
