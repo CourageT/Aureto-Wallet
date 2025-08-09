@@ -50,15 +50,20 @@ export default function AddTransactionModal({ isOpen, onClose, defaultType = 'ex
     queryKey: ["/api/wallets"],
   });
 
+  const transactionType = form.watch("type");
   const { data: categories } = useQuery({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/categories", transactionType],
+    queryFn: async () => {
+      const response = await fetch(`/api/categories?type=${transactionType || 'expense'}`);
+      return response.json();
+    },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: TransactionFormData) => {
       const response = await apiRequest('POST', '/api/transactions', {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: data.amount, // Keep as string for now
       });
       return response.json();
     },

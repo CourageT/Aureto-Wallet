@@ -264,11 +264,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/categories', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const categories = await storage.getUserCategories(userId);
+      const type = req.query.type as string;
+      const categories = await storage.getUserCategories(userId, type);
       res.json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
       res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Seed default categories
+  app.post('/api/categories/seed', isAuthenticated, async (req: any, res) => {
+    try {
+      const defaultCategories = [
+        // Income categories
+        { name: 'Salary', type: 'income', icon: 'fas fa-briefcase', color: '#22c55e', isDefault: true },
+        { name: 'Freelance', type: 'income', icon: 'fas fa-laptop', color: '#3b82f6', isDefault: true },
+        { name: 'Investment', type: 'income', icon: 'fas fa-chart-line', color: '#8b5cf6', isDefault: true },
+        { name: 'Business', type: 'income', icon: 'fas fa-building', color: '#06b6d4', isDefault: true },
+        { name: 'Other Income', type: 'income', icon: 'fas fa-plus-circle', color: '#10b981', isDefault: true },
+        
+        // Expense categories
+        { name: 'Food & Dining', type: 'expense', icon: 'fas fa-utensils', color: '#f59e0b', isDefault: true },
+        { name: 'Transportation', type: 'expense', icon: 'fas fa-car', color: '#ef4444', isDefault: true },
+        { name: 'Shopping', type: 'expense', icon: 'fas fa-shopping-bag', color: '#8b5cf6', isDefault: true },
+        { name: 'Entertainment', type: 'expense', icon: 'fas fa-film', color: '#06b6d4', isDefault: true },
+        { name: 'Bills & Utilities', type: 'expense', icon: 'fas fa-file-invoice-dollar', color: '#64748b', isDefault: true },
+        { name: 'Healthcare', type: 'expense', icon: 'fas fa-heart', color: '#dc2626', isDefault: true },
+        { name: 'Education', type: 'expense', icon: 'fas fa-graduation-cap', color: '#7c3aed', isDefault: true },
+        { name: 'Travel', type: 'expense', icon: 'fas fa-plane', color: '#059669', isDefault: true },
+        { name: 'Home & Garden', type: 'expense', icon: 'fas fa-home', color: '#d97706', isDefault: true },
+        { name: 'Personal Care', type: 'expense', icon: 'fas fa-spa', color: '#be185d', isDefault: true },
+        { name: 'Other Expenses', type: 'expense', icon: 'fas fa-minus-circle', color: '#6b7280', isDefault: true },
+      ];
+
+      await storage.seedDefaultCategories(defaultCategories);
+      res.json({ message: "Default categories seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding categories:", error);
+      res.status(500).json({ message: "Failed to seed categories" });
     }
   });
 

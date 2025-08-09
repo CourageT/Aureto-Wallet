@@ -267,14 +267,36 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(categories).where(eq(categories.isDefault, true));
   }
 
-  async getUserCategories(userId: string): Promise<Category[]> {
+  async getUserCategories(userId: string, type?: string): Promise<Category[]> {
+    let conditions = sql`${categories.isDefault} = true OR ${categories.createdBy} = ${userId}`;
+    
+    if (type) {
+      conditions = sql`(${conditions}) AND ${categories.type} = ${type}`;
+    }
+    
     return await db
       .select()
       .from(categories)
-      .where(
-        sql`${categories.isDefault} = true OR ${categories.createdBy} = ${userId}`
-      )
+      .where(conditions)
       .orderBy(categories.name);
+  }
+
+  async seedDefaultCategories(defaultCategories: any[]): Promise<void> {
+    // Check if default categories already exist
+    const existingDefaults = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.isDefault, true));
+
+    if (existingDefaults.length > 0) {
+      return; // Already seeded
+    }
+
+    // Insert default categories
+    await db.insert(categories).values(defaultCategories.map(cat => ({
+      ...cat,
+      createdBy: null, // System-created
+    })));
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {

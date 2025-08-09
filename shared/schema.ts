@@ -68,6 +68,7 @@ export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  type: varchar("type", { length: 20 }).notNull().default('expense'), // 'income', 'expense'
   icon: varchar("icon", { length: 100 }),
   color: varchar("color", { length: 7 }),
   isDefault: boolean("is_default").notNull().default(false),
