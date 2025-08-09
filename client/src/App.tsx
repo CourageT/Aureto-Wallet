@@ -8,6 +8,8 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Wallets from "@/pages/wallets";
 import Transactions from "@/pages/transactions";
+import Goals from "@/pages/goals";
+import Analytics from "@/pages/analytics";
 import Reports from "@/pages/reports";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
@@ -25,6 +27,8 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/wallets" component={Wallets} />
           <Route path="/transactions" component={Transactions} />
+          <Route path="/goals" component={Goals} />
+          <Route path="/analytics" component={Analytics} />
           <Route path="/reports" component={Reports} />
           <Route path="/team" component={Team} />
           <Route path="/settings" component={Settings} />

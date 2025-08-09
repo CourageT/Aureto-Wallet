@@ -119,13 +119,96 @@ export const walletInvitations = pgTable("wallet_invitations", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Financial goals table
+export const goals = pgTable("goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  walletId: varchar("wallet_id"), // Optional: can be linked to specific wallet
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  currentAmount: decimal("current_amount", { precision: 12, scale: 2 }).notNull().default('0.00'),
+  targetDate: timestamp("target_date"),
+  category: varchar("category", { length: 100 }), // 'emergency_fund', 'vacation', 'house', etc.
+  priority: varchar("priority", { length: 20 }).default('medium'), // 'high', 'medium', 'low'
+  isActive: boolean("is_active").notNull().default(true),
+  achievedAt: timestamp("achieved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'budget_alert', 'goal_milestone', 'transaction_anomaly', etc.
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  data: jsonb("data"), // Additional structured data
+  isRead: boolean("is_read").notNull().default(false),
+  priority: varchar("priority", { length: 20 }).default('normal'), // 'high', 'normal', 'low'
+  actionUrl: varchar("action_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Smart alerts/rules table
+export const alerts = pgTable("alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  walletId: varchar("wallet_id"),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'spending_limit', 'budget_threshold', 'unusual_activity', etc.
+  conditions: jsonb("conditions").notNull(), // Rule conditions as JSON
+  actions: jsonb("actions").notNull(), // Actions to take as JSON
+  isActive: boolean("is_active").notNull().default(true),
+  lastTriggered: timestamp("last_triggered"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Reports table for custom reports
+export const reports = pgTable("reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // 'spending', 'income', 'budget', 'custom'
+  config: jsonb("config").notNull(), // Report configuration as JSON
+  schedule: jsonb("schedule"), // For scheduled reports
+  lastGenerated: timestamp("last_generated"),
+  isPublic: boolean("is_public").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User preferences table
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  currency: varchar("currency", { length: 3 }).default('USD'),
+  timezone: varchar("timezone", { length: 50 }).default('UTC'),
+  dateFormat: varchar("date_format", { length: 20 }).default('YYYY-MM-DD'),
+  language: varchar("language", { length: 10 }).default('en'),
+  theme: varchar("theme", { length: 20 }).default('light'), // 'light', 'dark', 'auto'
+  aiPreferences: jsonb("ai_preferences"), // AI/ML settings
+  notificationPreferences: jsonb("notification_preferences"),
+  privacySettings: jsonb("privacy_settings"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   walletMembers: many(walletMembers),
   transactions: many(transactions),
   budgets: many(budgets),
   categories: many(categories),
   invitations: many(walletInvitations),
+  goals: many(goals),
+  notifications: many(notifications),
+  alerts: many(alerts),
+  reports: many(reports),
+  preferences: one(userPreferences),
 }));
 
 export const walletsRelations = relations(wallets, ({ one, many }) => ({
@@ -209,6 +292,99 @@ export const walletInvitationsRelations = relations(walletInvitations, ({ one })
   }),
 }));
 
+export const goalsRelations = relations(goals, ({ one }) => ({
+  user: one(users, {
+    fields: [goals.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [goals.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const alertsRelations = relations(alerts, ({ one }) => ({
+  user: one(users, {
+    fields: [alerts.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [alerts.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  user: one(users, {
+    fields: [reports.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+// Export types
+export type User = typeof users.$inferSelect;
+export type UpsertUser = typeof users.$inferInsert;
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = typeof wallets.$inferInsert;
+export type WalletMember = typeof walletMembers.$inferSelect;
+export type InsertWalletMember = typeof walletMembers.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;
+export type Budget = typeof budgets.$inferSelect;
+export type InsertBudget = typeof budgets.$inferInsert;
+export type WalletInvitation = typeof walletInvitations.$inferSelect;
+export type InsertWalletInvitation = typeof walletInvitations.$inferInsert;
+export type Goal = typeof goals.$inferSelect;
+export type InsertGoal = typeof goals.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+export type Alert = typeof alerts.$inferSelect;
+export type InsertAlert = typeof alerts.$inferInsert;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = typeof userPreferences.$inferInsert;
+
+// Composite types for complex queries
+export type WalletWithMembers = Wallet & {
+  members: (WalletMember & { user: User })[];
+  _count: {
+    transactions: number;
+    members: number;
+  };
+};
+
+export type WalletMemberWithUser = WalletMember & {
+  user: User;
+};
+
+export type TransactionWithDetails = Transaction & {
+  category: Category;
+  wallet: Wallet;
+  creator: User;
+};
+
+export type GoalWithDetails = Goal & {
+  user: User;
+  wallet?: Wallet;
+};
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -248,37 +424,38 @@ export const insertWalletInvitationSchema = createInsertSchema(walletInvitations
   createdAt: true,
 });
 
-// Types
-export type UpsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type InsertWallet = z.infer<typeof insertWalletSchema>;
-export type Wallet = typeof wallets.$inferSelect;
-export type InsertWalletMember = z.infer<typeof insertWalletMemberSchema>;
-export type WalletMember = typeof walletMembers.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
-export type Category = typeof categories.$inferSelect;
-export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
-export type Transaction = typeof transactions.$inferSelect;
-export type InsertBudget = z.infer<typeof insertBudgetSchema>;
-export type Budget = typeof budgets.$inferSelect;
-export type InsertWalletInvitation = z.infer<typeof insertWalletInvitationSchema>;
-export type WalletInvitation = typeof walletInvitations.$inferSelect;
+export const insertGoalSchema = createInsertSchema(goals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
-// Extended types with relations
-export type WalletWithMembers = Wallet & {
-  members: (WalletMember & { user: User })[];
-  _count?: {
-    transactions: number;
-    members: number;
-  };
-};
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
 
-export type TransactionWithDetails = Transaction & {
-  category: Category;
-  wallet: Wallet;
-  creator: User;
-};
+export const insertAlertSchema = createInsertSchema(alerts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
-export type WalletMemberWithUser = WalletMember & {
-  user: User;
-};
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Enhanced insert schemas inferred types  
+export type InsertGoalData = z.infer<typeof insertGoalSchema>;
+export type InsertNotificationData = z.infer<typeof insertNotificationSchema>;
+export type InsertAlertData = z.infer<typeof insertAlertSchema>;
+export type InsertReportData = z.infer<typeof insertReportSchema>;
+export type InsertUserPreferencesData = z.infer<typeof insertUserPreferencesSchema>;
