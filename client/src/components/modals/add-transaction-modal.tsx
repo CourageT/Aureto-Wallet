@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import CategorySelect from "@/components/ui/category-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
@@ -157,20 +158,14 @@ export default function AddTransactionModal({ isOpen, onClose, defaultType = 'ex
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Array.isArray(categories) ? categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      )) : null}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <CategorySelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select category"
+                      filterType={form.watch('type')}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
