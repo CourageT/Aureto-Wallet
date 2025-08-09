@@ -49,13 +49,13 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center space-x-3 px-4 py-3">
           <img
-            src={user?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"}
+            src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"}
             alt="User avatar"
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
             <p className="text-sm font-medium text-gray-900">
-              {user?.firstName || user?.email || "User"}
+              {(user as any)?.firstName || (user as any)?.email || "User"}
             </p>
             <p className="text-xs text-gray-500">Account Owner</p>
           </div>

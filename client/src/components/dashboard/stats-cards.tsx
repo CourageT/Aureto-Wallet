@@ -30,8 +30,9 @@ export default function StatsCards() {
 
   const totalBalance = Array.isArray(wallets) ? wallets.reduce((sum: number, wallet: any) => sum + parseFloat(wallet.balance || '0'), 0) : 0;
   const activeWallets = Array.isArray(wallets) ? wallets.length : 0;
-  const monthlyExpenses = monthlyData?.totalExpenses || 0;
-  const monthlyIncome = monthlyData?.totalIncome || 0;
+  const monthlyData2 = monthlyData as any || {};
+  const monthlyExpenses = monthlyData2.totalExpenses || 0;
+  const monthlyIncome = monthlyData2.totalIncome || 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

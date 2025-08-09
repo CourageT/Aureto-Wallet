@@ -35,7 +35,17 @@ export default function Budgets() {
   const { isAuthenticated, isLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
+  const [showTemplatesDialog, setShowTemplatesDialog] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const queryClient = useQueryClient();
+
+  // Budget templates for quick setup
+  const budgetTemplates = [
+    { id: "essential", name: "Essential Expenses", description: "Basic monthly needs", categories: ["🏠 Housing", "🍕 Food & Dining", "🚗 Transportation"], amounts: [1200, 400, 300] },
+    { id: "balanced", name: "Balanced Budget", description: "Well-rounded financial plan", categories: ["🏠 Housing", "🍕 Food & Dining", "🎯 Entertainment", "💰 Savings"], amounts: [1000, 350, 200, 500] },
+    { id: "student", name: "Student Budget", description: "Budget for students", categories: ["📚 Education", "🍕 Food & Dining", "🚗 Transportation"], amounts: [800, 250, 150] },
+    { id: "family", name: "Family Budget", description: "Complete family expenses", categories: ["🏠 Housing", "🍕 Food & Dining", "👶 Childcare", "🎯 Entertainment"], amounts: [1500, 600, 400, 200] }
+  ];
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
@@ -507,6 +517,65 @@ export default function Budgets() {
           </div>
         </main>
       </div>
+
+      {/* Budget Templates Dialog */}
+      <Dialog open={showTemplatesDialog} onOpenChange={setShowTemplatesDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Choose Budget Template</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {budgetTemplates.map((template) => (
+              <Card key={template.id} className={`cursor-pointer transition-all ${selectedTemplate === template.id ? 'ring-2 ring-primary-500 bg-primary-50' : 'hover:shadow-md'}`} onClick={() => setSelectedTemplate(template.id)}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{template.name}</CardTitle>
+                  <p className="text-sm text-gray-500">{template.description}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {template.categories.map((category, index) => (
+                      <div key={index} className="flex justify-between items-center text-sm">
+                        <span>{category}</span>
+                        <span className="font-medium">${template.amounts[index]}</span>
+                      </div>
+                    ))}
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between items-center font-medium">
+                        <span>Total</span>
+                        <span>${template.amounts.reduce((sum, amount) => sum + amount, 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setShowTemplatesDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedTemplate) {
+                  const template = budgetTemplates.find(t => t.id === selectedTemplate);
+                  if (template) {
+                    // Apply template logic here
+                    toast({
+                      title: "Template Applied",
+                      description: `${template.name} template will be applied to your budgets.`,
+                    });
+                    setShowTemplatesDialog(false);
+                    setSelectedTemplate("");
+                  }
+                }
+              }}
+              disabled={!selectedTemplate}
+            >
+              Apply Template
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

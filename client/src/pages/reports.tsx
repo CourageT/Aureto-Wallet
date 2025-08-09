@@ -62,12 +62,14 @@ export default function Reports() {
     enabled: isAuthenticated,
   });
 
+  const walletsArray = Array.isArray(wallets) ? wallets : [];
+
   // Set default wallet when wallets load
   useEffect(() => {
-    if (wallets.length && !selectedWallet) {
-      setSelectedWallet(wallets[0].id);
+    if (walletsArray.length && !selectedWallet) {
+      setSelectedWallet(walletsArray[0].id);
     }
-  }, [wallets, selectedWallet]);
+  }, [walletsArray, selectedWallet]);
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(selectedPeriod));
@@ -255,7 +257,7 @@ export default function Reports() {
                       <SelectValue placeholder="Select wallet" />
                     </SelectTrigger>
                     <SelectContent>
-                      {wallets.map((wallet: any) => (
+                      {walletsArray.map((wallet: any) => (
                         <SelectItem key={wallet.id} value={wallet.id}>
                           {wallet.name}
                         </SelectItem>
