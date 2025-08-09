@@ -8,13 +8,13 @@ import MobileNavigation from '@/components/layout/mobile-navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { isUnauthorizedError } from '@/lib/authUtils';
-import { Target, Plus, DollarSign, Calendar, TrendingUp, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { Target, Plus, DollarSign, Calendar, TrendingUp, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Goal {
@@ -490,29 +490,27 @@ export default function Goals() {
                           {goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1)}
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
                             setSelectedGoal(goal);
                             setIsEditDialogOpen(true);
-                          }}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Goal
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => setGoalToDelete(goal)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Goal
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          onClick={() => setGoalToDelete(goal)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
