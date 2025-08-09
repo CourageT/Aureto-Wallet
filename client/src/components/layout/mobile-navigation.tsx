@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 const navigationItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
+  { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/transactions', icon: CreditCard, label: 'Transactions' },
   { href: '/wallets', icon: Wallet, label: 'Wallets' },
   { href: '/goals', icon: Target, label: 'Goals' },
