@@ -158,13 +158,22 @@ export default function Team() {
 
   return (
     <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      
       <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
         <main className="flex-1 overflow-auto">
-          <TopBar title="Team Management" subtitle="Manage wallet members and their permissions" />
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Team Management" subtitle="Manage wallet members and their permissions" />
+          </div>
           
-          <div className="p-6 space-y-6">
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
             {/* Wallet Selection */}
             <Card>
               <CardHeader>

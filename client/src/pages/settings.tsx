@@ -151,13 +151,23 @@ export default function Settings() {
   const defaultCategories = categories?.filter((cat: any) => cat.isDefault) || [];
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      <Sidebar />
+    <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
       
-      <main className="flex-1 overflow-auto">
-        <TopBar title="Settings" subtitle="Manage your account preferences and categories" />
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
-        <div className="p-6 space-y-6">
+        <main className="flex-1 overflow-auto">
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Settings" subtitle="Manage your account preferences and categories" />
+          </div>
+          
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
           {/* Account Information */}
           <Card>
             <CardHeader>
@@ -491,8 +501,9 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

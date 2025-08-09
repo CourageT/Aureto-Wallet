@@ -87,13 +87,23 @@ export default function Reports() {
   const selectedWalletName = wallets?.find((w: any) => w.id === selectedWallet)?.name || 'Wallet';
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      <Sidebar />
+    <>
+      {/* Mobile Navigation */}
+      <MobileNavigation />
       
-      <main className="flex-1 overflow-auto">
-        <TopBar title="Reports" subtitle="Analyze your spending patterns and financial health" />
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
-        <div className="p-6 space-y-6">
+        <main className="flex-1 overflow-auto">
+          {/* Desktop TopBar */}
+          <div className="hidden md:block">
+            <TopBar title="Reports" subtitle="Analyze your spending patterns and financial health" />
+          </div>
+          
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
           {/* Filters */}
           <Card>
             <CardHeader>
@@ -380,8 +390,9 @@ export default function Reports() {
               </div>
             </>
           )}
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
