@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -422,26 +422,28 @@ export default function Goals() {
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <AlertDialog open={!!goalToDelete} onOpenChange={() => setGoalToDelete(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Goal</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete "{goalToDelete?.name}"? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteGoal}
-                className="bg-red-600 hover:bg-red-700"
-                disabled={deleteGoalMutation.isPending}
-              >
-                {deleteGoalMutation.isPending ? 'Deleting...' : 'Delete'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Dialog open={!!goalToDelete} onOpenChange={() => setGoalToDelete(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Goal</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p>Are you sure you want to delete "{goalToDelete?.name}"? This action cannot be undone.</p>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setGoalToDelete(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteGoal}
+                  variant="destructive"
+                  disabled={deleteGoalMutation.isPending}
+                >
+                  {deleteGoalMutation.isPending ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
             </div>
 
       {goals.length === 0 ? (
