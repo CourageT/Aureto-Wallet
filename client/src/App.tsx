@@ -11,6 +11,7 @@ import Transactions from "@/pages/transactions";
 import Goals from "@/pages/goals";
 import Analytics from "@/pages/analytics";
 import Reports from "@/pages/reports";
+import Budgets from "@/pages/budgets";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/goals" component={Goals} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/reports" component={Reports} />
+          <Route path="/budgets" component={Budgets} />
           <Route path="/team" component={Team} />
           <Route path="/settings" component={Settings} />
         </>

@@ -5,6 +5,12 @@ export default function StatsCards() {
   const { data: wallets, isLoading } = useQuery({
     queryKey: ["/api/wallets"],
   });
+  
+  // Get transactions for current month calculations
+  const { data: monthlyData } = useQuery({
+    queryKey: ["/api/reports/financial-summary"],
+    enabled: Array.isArray(wallets) && wallets.length > 0,
+  });
 
   if (isLoading) {
     return (
@@ -24,6 +30,8 @@ export default function StatsCards() {
 
   const totalBalance = Array.isArray(wallets) ? wallets.reduce((sum: number, wallet: any) => sum + parseFloat(wallet.balance || '0'), 0) : 0;
   const activeWallets = Array.isArray(wallets) ? wallets.length : 0;
+  const monthlyExpenses = monthlyData?.totalExpenses || 0;
+  const monthlyIncome = monthlyData?.totalIncome || 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -49,13 +57,15 @@ export default function StatsCards() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Monthly Expenses</p>
-            <p className="text-2xl font-bold text-gray-900">$0.00</p>
+            <p className="text-2xl font-bold text-gray-900">
+              ${monthlyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
             <p className="text-sm text-gray-600 mt-1">
               <span>This month</span>
             </p>
           </div>
-          <div className="w-12 h-12 bg-error-50 rounded-lg flex items-center justify-center">
-            <i className="fas fa-credit-card text-error-500 text-lg"></i>
+          <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+            <i className="fas fa-credit-card text-red-500 text-lg"></i>
           </div>
         </div>
       </Card>
@@ -64,13 +74,15 @@ export default function StatsCards() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Monthly Income</p>
-            <p className="text-2xl font-bold text-gray-900">$0.00</p>
-            <p className="text-sm text-success-600 mt-1">
+            <p className="text-2xl font-bold text-gray-900">
+              ${monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-sm text-green-600 mt-1">
               <span>This month</span>
             </p>
           </div>
-          <div className="w-12 h-12 bg-success-50 rounded-lg flex items-center justify-center">
-            <i className="fas fa-arrow-down text-success-600 text-lg"></i>
+          <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+            <i className="fas fa-arrow-down text-green-600 text-lg"></i>
           </div>
         </div>
       </Card>

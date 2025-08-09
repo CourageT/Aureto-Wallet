@@ -3,10 +3,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: "fas fa-chart-line" },
+  { name: "Dashboard", href: "/", icon: "fas fa-home" },
   { name: "Wallets", href: "/wallets", icon: "fas fa-wallet" },
   { name: "Transactions", href: "/transactions", icon: "fas fa-exchange-alt" },
-  { name: "Reports", href: "/reports", icon: "fas fa-chart-pie" },
+  { name: "Goals", href: "/goals", icon: "fas fa-bullseye" },
+  { name: "Analytics", href: "/analytics", icon: "fas fa-chart-bar" },
+  { name: "Reports", href: "/reports", icon: "fas fa-chart-line" },
+  { name: "Budgets", href: "/budgets", icon: "fas fa-calculator" },
   { name: "Team", href: "/team", icon: "fas fa-users" },
   { name: "Settings", href: "/settings", icon: "fas fa-cog" },
 ];
