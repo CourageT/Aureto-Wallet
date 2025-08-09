@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/goals/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/goals/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const goal = await storage.getGoal(req.params.id);
@@ -649,11 +649,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Goal not found" });
       }
 
-      const updatedGoal = await storage.updateGoal(req.params.id, req.body);
+      const updates = req.body;
+      if (updates.targetDate && updates.targetDate !== null) {
+        updates.targetDate = new Date(updates.targetDate);
+      }
+
+      const updatedGoal = await storage.updateGoal(req.params.id, updates);
       res.json(updatedGoal);
     } catch (error) {
       console.error("Error updating goal:", error);
       res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+
+  app.delete('/api/goals/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goal = await storage.getGoal(req.params.id);
+      
+      if (!goal || goal.userId !== userId) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      await storage.deleteGoal(req.params.id);
+      res.json({ message: "Goal deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      res.status(500).json({ message: "Failed to delete goal" });
     }
   });
 
@@ -662,6 +684,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { amount } = req.body;
       
+      if (!amount || parseFloat(amount) <= 0) {
+        return res.status(400).json({ message: "Invalid contribution amount" });
+      }
+
       const goal = await storage.getGoal(req.params.id);
       if (!goal || goal.userId !== userId) {
         return res.status(404).json({ message: "Goal not found" });
@@ -680,14 +706,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isActive: false,
         });
         
-        await storage.createNotification({
-          userId,
-          type: 'goal_achieved',
-          title: 'Goal Achieved! 🎉',
-          message: `Congratulations! You've achieved your goal "${goal.name}"!`,
-          data: { goalId: goal.id },
-          priority: 'high',
-        });
+        // Create achievement notification (handle gracefully if fails)
+        try {
+          await storage.createNotification({
+            userId,
+            type: 'goal_achieved',
+            title: 'Goal Achieved! 🎉',
+            message: `Congratulations! You've achieved your goal "${goal.name}"!`,
+            data: { goalId: goal.id, amount: newAmount },
+            priority: 'high',
+          });
+        } catch (notificationError) {
+          console.warn('Failed to create achievement notification:', notificationError);
+        }
       }
 
       res.json(updatedGoal);
@@ -796,110 +827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Additional goal management routes
-  app.get('/api/goals/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const goal = await storage.getGoal(req.params.id);
-      
-      if (!goal || goal.userId !== userId) {
-        return res.status(404).json({ message: "Goal not found" });
-      }
 
-      res.json(goal);
-    } catch (error) {
-      console.error("Error fetching goal:", error);
-      res.status(500).json({ message: "Failed to fetch goal" });
-    }
-  });
-
-  app.patch('/api/goals/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const goal = await storage.getGoal(req.params.id);
-      
-      if (!goal || goal.userId !== userId) {
-        return res.status(404).json({ message: "Goal not found" });
-      }
-
-      const updates = req.body;
-      if (updates.targetDate && updates.targetDate !== null) {
-        updates.targetDate = new Date(updates.targetDate);
-      }
-
-      const updatedGoal = await storage.updateGoal(req.params.id, updates);
-      res.json(updatedGoal);
-    } catch (error) {
-      console.error("Error updating goal:", error);
-      res.status(500).json({ message: "Failed to update goal" });
-    }
-  });
-
-  app.delete('/api/goals/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const goal = await storage.getGoal(req.params.id);
-      
-      if (!goal || goal.userId !== userId) {
-        return res.status(404).json({ message: "Goal not found" });
-      }
-
-      await storage.deleteGoal(req.params.id);
-      res.json({ message: "Goal deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting goal:", error);
-      res.status(500).json({ message: "Failed to delete goal" });
-    }
-  });
-
-  app.post('/api/goals/:id/contribute', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { amount } = req.body;
-      
-      if (!amount || parseFloat(amount) <= 0) {
-        return res.status(400).json({ message: "Invalid contribution amount" });
-      }
-
-      const goal = await storage.getGoal(req.params.id);
-      if (!goal || goal.userId !== userId) {
-        return res.status(404).json({ message: "Goal not found" });
-      }
-
-      const contribution = parseFloat(amount);
-      const newAmount = parseFloat(goal.currentAmount) + contribution;
-      const updatedGoal = await storage.updateGoal(req.params.id, { 
-        currentAmount: newAmount.toString(),
-      });
-
-      // Check if goal is achieved
-      if (newAmount >= parseFloat(goal.targetAmount) && !goal.achievedAt) {
-        await storage.updateGoal(req.params.id, { 
-          achievedAt: new Date(),
-          isActive: false,
-        });
-        
-        // Create achievement notification (handle gracefully if fails)
-        try {
-          await storage.createNotification({
-            userId,
-            type: 'goal_achieved',
-            title: 'Goal Achieved! 🎉',
-            message: `Congratulations! You've achieved your goal "${goal.name}"!`,
-            data: { goalId: goal.id, amount: newAmount },
-            priority: 'high',
-          });
-        } catch (notificationError) {
-          console.warn('Failed to create achievement notification:', notificationError);
-        }
-      }
-
-      res.json(updatedGoal);
-    } catch (error) {
-      console.error("Error contributing to goal:", error);
-      res.status(500).json({ message: "Failed to contribute to goal" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

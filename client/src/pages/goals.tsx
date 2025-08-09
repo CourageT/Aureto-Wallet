@@ -1,21 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Sidebar from '@/components/layout/sidebar';
 import TopBar from '@/components/layout/topbar';
 import MobileNavigation from '@/components/layout/mobile-navigation';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
-
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { isUnauthorizedError } from '@/lib/authUtils';
-import { Target, Plus, DollarSign, Calendar, TrendingUp, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, Target, TrendingUp, Edit, Trash2, DollarSign } from 'lucide-react';
 
 interface Goal {
   id: string;
@@ -32,15 +23,14 @@ interface Goal {
 }
 
 export default function Goals() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showContributeForm, setShowContributeForm] = useState<string | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
-  const [contributionAmount, setContributionAmount] = useState('');
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: goals = [], isLoading } = useQuery({
+  const { data: goals = [], isLoading } = useQuery<Goal[]>({
     queryKey: ['/api/goals'],
   });
 
@@ -55,10 +45,9 @@ export default function Goals() {
         description: "Goal created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
-      setIsCreateDialogOpen(false);
+      setShowCreateForm(false);
     },
     onError: (error: Error) => {
-      console.error('Goal creation error:', error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -76,8 +65,8 @@ export default function Goals() {
     },
   });
 
-  const contributeMutation = useMutation({
-    mutationFn: async ({ goalId, amount }: { goalId: string; amount: string }) => {
+  const contributeToGoalMutation = useMutation({
+    mutationFn: async ({ goalId, amount }: { goalId: string; amount: number }) => {
       const response = await apiRequest('POST', `/api/goals/${goalId}/contribute`, { amount });
       return response.json();
     },
@@ -87,8 +76,7 @@ export default function Goals() {
         description: "Contribution added successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
-      setSelectedGoal(null);
-      setContributionAmount('');
+      setShowContributeForm(null);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -102,47 +90,15 @@ export default function Goals() {
       }
       toast({
         title: "Error",
-        description: "Failed to add contribution",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteGoalMutation = useMutation({
-    mutationFn: async (goalId: string) => {
-      const response = await apiRequest('DELETE', `/api/goals/${goalId}`);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Goal deleted successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
-      setGoalToDelete(null);
-    },
-    onError: (error: Error) => {
-      console.error('Goal deletion error:', error);
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => window.location.href = "/api/login", 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete goal",
+        description: error.message || "Failed to add contribution",
         variant: "destructive",
       });
     },
   });
 
   const updateGoalMutation = useMutation({
-    mutationFn: async ({ goalId, updates }: { goalId: string; updates: Partial<Goal> }) => {
-      const response = await apiRequest('PATCH', `/api/goals/${goalId}`, updates);
+    mutationFn: async ({ goalId, goalData }: { goalId: string; goalData: Partial<Goal> }) => {
+      const response = await apiRequest('PUT', `/api/goals/${goalId}`, goalData);
       return response.json();
     },
     onSuccess: () => {
@@ -151,11 +107,10 @@ export default function Goals() {
         description: "Goal updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
-      setIsEditDialogOpen(false);
+      setShowEditForm(false);
       setSelectedGoal(null);
     },
     onError: (error: Error) => {
-      console.error('Goal update error:', error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -173,6 +128,36 @@ export default function Goals() {
     },
   });
 
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: string) => {
+      const response = await apiRequest('DELETE', `/api/goals/${goalId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Goal deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => window.location.href = "/api/login", 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete goal",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -181,436 +166,551 @@ export default function Goals() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       targetAmount: formData.get('targetAmount') as string,
-      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : null,
+      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : undefined,
       category: formData.get('category') as string || 'savings',
       priority: formData.get('priority') as string || 'medium',
     };
 
-    console.log('Creating goal with data:', goalData);
     createGoalMutation.mutate(goalData);
+  };
+
+  const handleContribute = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const amount = parseFloat(formData.get('amount') as string);
+    
+    if (showContributeForm && amount > 0) {
+      contributeToGoalMutation.mutate({ goalId: showContributeForm, amount });
+    }
   };
 
   const handleEditGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedGoal) return;
-    
     const formData = new FormData(e.currentTarget);
     
-    const updates = {
+    if (!selectedGoal) return;
+
+    const goalData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       targetAmount: formData.get('targetAmount') as string,
-      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : null,
+      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : undefined,
       category: formData.get('category') as string || 'savings',
       priority: formData.get('priority') as string || 'medium',
     };
 
-    console.log('Updating goal with data:', updates);
-    updateGoalMutation.mutate({ goalId: selectedGoal.id, updates });
+    updateGoalMutation.mutate({ goalId: selectedGoal.id, goalData });
   };
 
-  const handleDeleteGoal = () => {
-    if (!goalToDelete) return;
-    deleteGoalMutation.mutate(goalToDelete.id);
-  };
-
-  const handleContribute = () => {
-    if (!selectedGoal || !contributionAmount) return;
-    
-    contributeMutation.mutate({
-      goalId: selectedGoal.id,
-      amount: contributionAmount,
-    });
-  };
-
-  const calculateProgress = (current: string, target: string): number => {
-    const currentAmount = parseFloat(current);
-    const targetAmount = parseFloat(target);
-    return targetAmount > 0 ? Math.min((currentAmount / targetAmount) * 100, 100) : 0;
-  };
-
-  const getProgressColor = (progress: number): string => {
-    if (progress >= 100) return 'bg-green-500';
-    if (progress >= 75) return 'bg-blue-500';
-    if (progress >= 50) return 'bg-yellow-500';
-    return 'bg-orange-500';
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Financial Goals</h1>
+      <div className="min-h-screen flex bg-gray-50">
+        <div className="hidden md:block">
+          <Sidebar />
         </div>
-        <div className="text-center py-8">Loading goals...</div>
+        <main className="flex-1 overflow-auto">
+          <div className="hidden md:block">
+            <TopBar title="Goals" subtitle="Track your progress towards financial milestones" />
+          </div>
+          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6">
+            <div className="text-center py-8">Loading goals...</div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
     <>
-      {/* Mobile Navigation */}
       <MobileNavigation />
       
       <div className="min-h-screen flex bg-gray-50">
-        {/* Desktop Sidebar */}
         <div className="hidden md:block">
           <Sidebar />
         </div>
         
         <main className="flex-1 overflow-auto">
-          {/* Desktop TopBar */}
           <div className="hidden md:block">
-            <TopBar title="Goals" subtitle="Track your progress towards financial milestones" />
+            <TopBar 
+              title="Goals" 
+              subtitle="Track your progress towards financial milestones"
+              showAddTransaction={true}
+            />
           </div>
           
           <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="hidden md:block">
+            {/* Mobile Header with Action Buttons */}
+            <div className="md:hidden flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold">Goals</h1>
+                <p className="text-sm text-muted-foreground">Track your financial milestones</p>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => window.location.href = '/transactions?action=add'}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 h-9 px-3 py-2"
+                >
+                  <Plus size={16} />
+                  Add Transaction
+                </button>
+                <button 
+                  onClick={() => setShowCreateForm(!showCreateForm)}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 py-2"
+                >
+                  <Target size={16} />
+                  New Goal
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Header */}
+            <div className="hidden md:flex items-center justify-between">
+              <div>
                 <h1 className="text-3xl font-bold">Financial Goals</h1>
                 <p className="text-muted-foreground">Track your progress towards financial milestones</p>
               </div>
-        
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Goal
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Goal</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateGoal} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Goal Name</Label>
-                <Input id="name" name="name" placeholder="Emergency Fund" required />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" name="description" placeholder="6 months of expenses" />
-              </div>
-              <div>
-                <Label htmlFor="targetAmount">Target Amount</Label>
-                <Input id="targetAmount" name="targetAmount" type="number" placeholder="10000" required />
-              </div>
-              <div>
-                <Label htmlFor="targetDate">Target Date</Label>
-                <Input id="targetDate" name="targetDate" type="date" />
-              </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <select id="category" name="category" className="w-full rounded-md border border-input bg-background px-3 py-2">
-                  <option value="emergency_fund">Emergency Fund</option>
-                  <option value="vacation">Vacation</option>
-                  <option value="house">House Down Payment</option>
-                  <option value="car">Car Purchase</option>
-                  <option value="education">Education</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="priority">Priority</Label>
-                <select id="priority" name="priority" className="w-full rounded-md border border-input bg-background px-3 py-2">
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createGoalMutation.isPending}>
-                  {createGoalMutation.isPending ? 'Creating...' : 'Create Goal'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Goal Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Goal</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditGoal} className="space-y-4">
-              <div>
-                <Label htmlFor="edit-name">Goal Name</Label>
-                <Input 
-                  id="edit-name" 
-                  name="name" 
-                  placeholder="Emergency Fund" 
-                  defaultValue={selectedGoal?.name}
-                  required 
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Description</Label>
-                <Input 
-                  id="edit-description" 
-                  name="description" 
-                  placeholder="6 months of expenses" 
-                  defaultValue={selectedGoal?.description}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-targetAmount">Target Amount</Label>
-                <Input 
-                  id="edit-targetAmount" 
-                  name="targetAmount" 
-                  type="number" 
-                  placeholder="10000" 
-                  defaultValue={selectedGoal?.targetAmount}
-                  required 
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-targetDate">Target Date</Label>
-                <Input 
-                  id="edit-targetDate" 
-                  name="targetDate" 
-                  type="date"
-                  defaultValue={selectedGoal?.targetDate ? selectedGoal.targetDate.split('T')[0] : ''}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-category">Category</Label>
-                <select 
-                  id="edit-category" 
-                  name="category" 
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                  defaultValue={selectedGoal?.category}
-                >
-                  <option value="emergency_fund">Emergency Fund</option>
-                  <option value="vacation">Vacation</option>
-                  <option value="house">House Down Payment</option>
-                  <option value="car">Car Purchase</option>
-                  <option value="education">Education</option>
-                  <option value="savings">Savings</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="edit-priority">Priority</Label>
-                <select 
-                  id="edit-priority" 
-                  name="priority" 
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                  defaultValue={selectedGoal?.priority}
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setSelectedGoal(null);
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateGoalMutation.isPending}>
-                  {updateGoalMutation.isPending ? 'Updating...' : 'Update Goal'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={!!goalToDelete} onOpenChange={() => setGoalToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Goal</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p>Are you sure you want to delete "{goalToDelete?.name}"? This action cannot be undone.</p>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setGoalToDelete(null)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDeleteGoal}
-                  variant="destructive"
-                  disabled={deleteGoalMutation.isPending}
-                >
-                  {deleteGoalMutation.isPending ? 'Deleting...' : 'Delete'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+              
+              <button 
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              >
+                <Target size={20} />
+                Create Goal
+              </button>
             </div>
 
-      {goals.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Target className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No goals yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Start by creating your first financial goal to track your progress
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Goal
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {goals.map((goal: Goal) => {
-            const progress = calculateProgress(goal.currentAmount, goal.targetAmount);
-            const isAchieved = goal.achievedAt || progress >= 100;
-            
-            return (
-              <Card key={goal.id} className={`${isAchieved ? 'border-green-200 bg-green-50/50' : ''}`}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className={`h-5 w-5 ${isAchieved ? 'text-green-600' : 'text-blue-600'}`} />
-                        {goal.name}
-                        {isAchieved && <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Achieved</span>}
-                      </CardTitle>
-                      {goal.description && (
-                        <CardDescription className="mt-1">{goal.description}</CardDescription>
-                      )}
+            {/* Create Goal Form */}
+            {showCreateForm && (
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div className="flex flex-col space-y-1.5 p-6">
+                  <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+                    <Target className="h-6 w-6" />
+                    Create New Goal
+                  </h3>
+                </div>
+                <div className="p-6 pt-0">
+                  <form onSubmit={handleCreateGoal} className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium leading-none">Goal Name</label>
+                        <input 
+                          name="name" 
+                          placeholder="Emergency Fund" 
+                          required 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium leading-none">Category</label>
+                        <select 
+                          name="category" 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <option value="emergency">Emergency Fund</option>
+                          <option value="vacation">Vacation</option>
+                          <option value="house">House/Property</option>
+                          <option value="car">Vehicle</option>
+                          <option value="education">Education</option>
+                          <option value="retirement">Retirement</option>
+                          <option value="debt">Debt Payoff</option>
+                          <option value="savings">General Savings</option>
+                          <option value="investment">Investment</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">Priority</div>
-                        <div className={`text-sm font-medium ${
-                          goal.priority === 'high' ? 'text-red-600' :
-                          goal.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          {goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1)}
+                    
+                    <div>
+                      <label className="text-sm font-medium leading-none">Description</label>
+                      <input 
+                        name="description" 
+                        placeholder="Save for 6 months of expenses"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm font-medium leading-none">Target Amount ($)</label>
+                        <input 
+                          name="targetAmount" 
+                          type="number" 
+                          step="0.01"
+                          placeholder="10000" 
+                          required 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium leading-none">Target Date</label>
+                        <input 
+                          name="targetDate" 
+                          type="date" 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium leading-none">Priority</label>
+                        <select 
+                          name="priority" 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <option value="high">High Priority</option>
+                          <option value="medium">Medium Priority</option>
+                          <option value="low">Low Priority</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowCreateForm(false)}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        disabled={createGoalMutation.isPending}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                      >
+                        {createGoalMutation.isPending ? 'Creating...' : 'Create Goal'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Goals Grid */}
+            {goals.length === 0 ? (
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div className="p-6 text-center py-12">
+                  <Target className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No goals yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Start your financial journey by setting your first goal. Whether it's an emergency fund, vacation, or dream purchase - every big achievement starts with a goal.
+                  </p>
+                  <button 
+                    onClick={() => setShowCreateForm(true)}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                  >
+                    <Target size={20} />
+                    Create Your First Goal
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {goals.map((goal: Goal) => {
+                  const current = parseFloat(goal.currentAmount);
+                  const target = parseFloat(goal.targetAmount);
+                  const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+                  const remaining = Math.max(target - current, 0);
+                  
+                  return (
+                    <div key={goal.id} className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex flex-col space-y-1.5 p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-semibold leading-none tracking-tight flex items-center gap-2">
+                              {goal.category === 'emergency' && '🚨'}
+                              {goal.category === 'vacation' && '✈️'}
+                              {goal.category === 'house' && '🏠'}
+                              {goal.category === 'car' && '🚗'}
+                              {goal.category === 'education' && '🎓'}
+                              {goal.category === 'retirement' && '🏖️'}
+                              {goal.category === 'debt' && '💳'}
+                              {goal.category === 'investment' && '📈'}
+                              {(!goal.category || goal.category === 'savings' || goal.category === 'other') && '💰'}
+                              {goal.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                goal.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                goal.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1)} Priority
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                setSelectedGoal(goal);
+                                setShowEditForm(true);
+                              }}
+                              className="p-2 hover:bg-muted rounded-md"
+                              title="Edit goal"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this goal?')) {
+                                  deleteGoalMutation.mutate(goal.id);
+                                }
+                              }}
+                              className="p-2 hover:bg-muted rounded-md text-red-500"
+                              title="Delete goal"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        {goal.description && (
+                          <p className="text-sm text-muted-foreground">{goal.description}</p>
+                        )}
+                      </div>
+                      
+                      <div className="p-6 pt-0 space-y-4">
+                        {/* Progress Bar */}
+                        <div>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span>Progress</span>
+                            <span className="font-medium">{progress.toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div 
+                              className={`h-3 rounded-full transition-all duration-500 ${
+                                progress >= 100 ? 'bg-green-600' : 
+                                progress >= 75 ? 'bg-blue-600' : 
+                                progress >= 50 ? 'bg-yellow-500' : 'bg-orange-500'
+                              }`}
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        
+                        {/* Financial Details */}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Saved</div>
+                            <div className="font-semibold text-green-600 text-lg">
+                              ${current.toLocaleString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Target</div>
+                            <div className="font-semibold text-lg">
+                              ${target.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-sm">
+                          <div className="text-muted-foreground">Remaining</div>
+                          <div className="font-semibold text-orange-600 text-lg">
+                            ${remaining.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {goal.targetDate && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Target Date: </span>
+                            <span className="font-medium">{formatDate(goal.targetDate)}</span>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            onClick={() => setShowContributeForm(goal.id)}
+                            className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 h-9 px-3 py-2"
+                          >
+                            <DollarSign size={16} />
+                            Add Money
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedGoal(goal);
+                              setShowEditForm(true);
+                            }}
+                            className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2"
+                          >
+                            <Edit size={16} />
+                            Edit
+                          </button>
+                        </div>
+
+                        {progress >= 100 && (
+                          <div className="bg-green-50 border border-green-200 rounded-md p-3 text-center">
+                            <div className="text-green-800 font-semibold text-sm">
+                              🎉 Goal Achieved! Congratulations!
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Contribute Form Modal */}
+            {showContributeForm && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-md w-full">
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Add Money to Goal
+                    </h3>
+                    <form onSubmit={handleContribute}>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium">Amount ($)</label>
+                          <input
+                            name="amount"
+                            type="number"
+                            step="0.01"
+                            placeholder="100.00"
+                            required
+                            min="0.01"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowContributeForm(null)}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={contributeToGoalMutation.isPending}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 h-10 px-4 py-2"
+                          >
+                            {contributeToGoalMutation.isPending ? 'Adding...' : 'Add Money'}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            setSelectedGoal(goal);
-                            setIsEditDialogOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                          onClick={() => setGoalToDelete(goal)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    </form>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Progress</span>
-                      <span className="font-medium">{progress.toFixed(1)}%</span>
-                    </div>
-                    <Progress value={progress} className="h-3" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Current</div>
-                      <div className="font-semibold text-green-600">
-                        ${parseFloat(goal.currentAmount).toLocaleString()}
+                </div>
+              </div>
+            )}
+
+            {/* Edit Goal Form Modal */}
+            {showEditForm && selectedGoal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Edit className="h-5 w-5" />
+                      Edit Goal
+                    </h3>
+                    <form onSubmit={handleEditGoal}>
+                      <div className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium">Goal Name</label>
+                            <input
+                              name="name"
+                              defaultValue={selectedGoal.name}
+                              required
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Category</label>
+                            <select
+                              name="category"
+                              defaultValue={selectedGoal.category}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <option value="emergency">Emergency Fund</option>
+                              <option value="vacation">Vacation</option>
+                              <option value="house">House/Property</option>
+                              <option value="car">Vehicle</option>
+                              <option value="education">Education</option>
+                              <option value="retirement">Retirement</option>
+                              <option value="debt">Debt Payoff</option>
+                              <option value="savings">General Savings</option>
+                              <option value="investment">Investment</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium">Description</label>
+                          <input
+                            name="description"
+                            defaultValue={selectedGoal.description || ''}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          />
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="text-sm font-medium">Target Amount ($)</label>
+                            <input
+                              name="targetAmount"
+                              type="number"
+                              step="0.01"
+                              defaultValue={selectedGoal.targetAmount}
+                              required
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Target Date</label>
+                            <input
+                              name="targetDate"
+                              type="date"
+                              defaultValue={selectedGoal.targetDate ? selectedGoal.targetDate.split('T')[0] : ''}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Priority</label>
+                            <select
+                              name="priority"
+                              defaultValue={selectedGoal.priority}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <option value="high">High Priority</option>
+                              <option value="medium">Medium Priority</option>
+                              <option value="low">Low Priority</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEditForm(false);
+                              setSelectedGoal(null);
+                            }}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={updateGoalMutation.isPending}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                          >
+                            {updateGoalMutation.isPending ? 'Updating...' : 'Update Goal'}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Target</div>
-                      <div className="font-semibold">
-                        ${parseFloat(goal.targetAmount).toLocaleString()}
-                      </div>
-                    </div>
+                    </form>
                   </div>
-
-                  {goal.targetDate && (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Target: {format(new Date(goal.targetDate), 'MMM dd, yyyy')}
-                    </div>
-                  )}
-
-                  {!isAchieved && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => setSelectedGoal(goal)}
-                    >
-                      <DollarSign className="mr-2 h-4 w-4" />
-                      Add Contribution
-                    </Button>
-                  )}
-
-                  {isAchieved && goal.achievedAt && (
-                    <div className="text-sm text-green-600 text-center">
-                      🎉 Achieved on {format(new Date(goal.achievedAt), 'MMM dd, yyyy')}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Contribution Dialog */}
-      <Dialog open={!!selectedGoal} onOpenChange={() => setSelectedGoal(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Contribution</DialogTitle>
-          </DialogHeader>
-          {selectedGoal && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold">{selectedGoal.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Current: ${parseFloat(selectedGoal.currentAmount).toLocaleString()} / 
-                  Target: ${parseFloat(selectedGoal.targetAmount).toLocaleString()}
-                </p>
+                </div>
               </div>
-              
-              <div>
-                <Label htmlFor="contribution">Contribution Amount</Label>
-                <Input
-                  id="contribution"
-                  type="number"
-                  placeholder="100"
-                  value={contributionAmount}
-                  onChange={(e) => setContributionAmount(e.target.value)}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setSelectedGoal(null)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleContribute} 
-                  disabled={contributeMutation.isPending || !contributionAmount}
-                >
-                  {contributeMutation.isPending ? 'Adding...' : 'Add Contribution'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
           </div>
         </main>
       </div>

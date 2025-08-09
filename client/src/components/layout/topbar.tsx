@@ -5,9 +5,10 @@ import AddTransactionModal from "@/components/modals/add-transaction-modal";
 interface TopBarProps {
   title: string;
   subtitle?: string;
+  showAddTransaction?: boolean;
 }
 
-export default function TopBar({ title, subtitle }: TopBarProps) {
+export default function TopBar({ title, subtitle, showAddTransaction = true }: TopBarProps) {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   return (
@@ -30,13 +31,15 @@ export default function TopBar({ title, subtitle }: TopBarProps) {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full"></span>
             </button>
             
-            <Button
-              onClick={() => setIsAddTransactionOpen(true)}
-              className="btn-primary px-4 py-2"
-            >
-              <i className="fas fa-plus text-sm mr-2"></i>
-              Add Transaction
-            </Button>
+            {showAddTransaction && (
+              <Button
+                onClick={() => setIsAddTransactionOpen(true)}
+                className="btn-primary px-4 py-2"
+              >
+                <i className="fas fa-plus text-sm mr-2"></i>
+                Add Transaction
+              </Button>
+            )}
           </div>
         </div>
       </header>
