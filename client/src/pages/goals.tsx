@@ -8,11 +8,13 @@ import MobileNavigation from '@/components/layout/mobile-navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { isUnauthorizedError } from '@/lib/authUtils';
-import { Target, Plus, DollarSign, Calendar, TrendingUp } from 'lucide-react';
+import { Target, Plus, DollarSign, Calendar, TrendingUp, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Goal {
@@ -31,8 +33,10 @@ interface Goal {
 
 export default function Goals() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [contributionAmount, setContributionAmount] = useState('');
+  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,6 +58,7 @@ export default function Goals() {
       setIsCreateDialogOpen(false);
     },
     onError: (error: Error) => {
+      console.error('Goal creation error:', error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -65,7 +70,7 @@ export default function Goals() {
       }
       toast({
         title: "Error",
-        description: "Failed to create goal",
+        description: error.message || "Failed to create goal",
         variant: "destructive",
       });
     },
@@ -103,18 +108,110 @@ export default function Goals() {
     },
   });
 
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: string) => {
+      const response = await apiRequest('DELETE', `/api/goals/${goalId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Goal deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
+      setGoalToDelete(null);
+    },
+    onError: (error: Error) => {
+      console.error('Goal deletion error:', error);
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => window.location.href = "/api/login", 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete goal",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateGoalMutation = useMutation({
+    mutationFn: async ({ goalId, updates }: { goalId: string; updates: Partial<Goal> }) => {
+      const response = await apiRequest('PATCH', `/api/goals/${goalId}`, updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Goal updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/goals'] });
+      setIsEditDialogOpen(false);
+      setSelectedGoal(null);
+    },
+    onError: (error: Error) => {
+      console.error('Goal update error:', error);
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => window.location.href = "/api/login", 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update goal",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    createGoalMutation.mutate({
+    const goalData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       targetAmount: formData.get('targetAmount') as string,
-      targetDate: formData.get('targetDate') as string,
-      category: formData.get('category') as string,
-      priority: formData.get('priority') as string,
-    });
+      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : null,
+      category: formData.get('category') as string || 'savings',
+      priority: formData.get('priority') as string || 'medium',
+    };
+
+    console.log('Creating goal with data:', goalData);
+    createGoalMutation.mutate(goalData);
+  };
+
+  const handleEditGoal = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedGoal) return;
+    
+    const formData = new FormData(e.currentTarget);
+    
+    const updates = {
+      name: formData.get('name') as string,
+      description: formData.get('description') as string,
+      targetAmount: formData.get('targetAmount') as string,
+      targetDate: formData.get('targetDate') ? formData.get('targetDate') as string : null,
+      category: formData.get('category') as string || 'savings',
+      priority: formData.get('priority') as string || 'medium',
+    };
+
+    console.log('Updating goal with data:', updates);
+    updateGoalMutation.mutate({ goalId: selectedGoal.id, updates });
+  };
+
+  const handleDeleteGoal = () => {
+    if (!goalToDelete) return;
+    deleteGoalMutation.mutate(goalToDelete.id);
   };
 
   const handleContribute = () => {
@@ -232,6 +329,119 @@ export default function Goals() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Goal Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Goal</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditGoal} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Goal Name</Label>
+                <Input 
+                  id="edit-name" 
+                  name="name" 
+                  placeholder="Emergency Fund" 
+                  defaultValue={selectedGoal?.name}
+                  required 
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Input 
+                  id="edit-description" 
+                  name="description" 
+                  placeholder="6 months of expenses" 
+                  defaultValue={selectedGoal?.description}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-targetAmount">Target Amount</Label>
+                <Input 
+                  id="edit-targetAmount" 
+                  name="targetAmount" 
+                  type="number" 
+                  placeholder="10000" 
+                  defaultValue={selectedGoal?.targetAmount}
+                  required 
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-targetDate">Target Date</Label>
+                <Input 
+                  id="edit-targetDate" 
+                  name="targetDate" 
+                  type="date"
+                  defaultValue={selectedGoal?.targetDate ? selectedGoal.targetDate.split('T')[0] : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-category">Category</Label>
+                <select 
+                  id="edit-category" 
+                  name="category" 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  defaultValue={selectedGoal?.category}
+                >
+                  <option value="emergency_fund">Emergency Fund</option>
+                  <option value="vacation">Vacation</option>
+                  <option value="house">House Down Payment</option>
+                  <option value="car">Car Purchase</option>
+                  <option value="education">Education</option>
+                  <option value="savings">Savings</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="edit-priority">Priority</Label>
+                <select 
+                  id="edit-priority" 
+                  name="priority" 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  defaultValue={selectedGoal?.priority}
+                >
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedGoal(null);
+                }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateGoalMutation.isPending}>
+                  {updateGoalMutation.isPending ? 'Updating...' : 'Update Goal'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!goalToDelete} onOpenChange={() => setGoalToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Goal</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{goalToDelete?.name}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteGoal}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={deleteGoalMutation.isPending}
+              >
+                {deleteGoalMutation.isPending ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
             </div>
 
       {goals.length === 0 ? (
@@ -268,14 +478,39 @@ export default function Goals() {
                         <CardDescription className="mt-1">{goal.description}</CardDescription>
                       )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-muted-foreground">Priority</div>
-                      <div className={`text-sm font-medium ${
-                        goal.priority === 'high' ? 'text-red-600' :
-                        goal.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                      }`}>
-                        {goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1)}
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">Priority</div>
+                        <div className={`text-sm font-medium ${
+                          goal.priority === 'high' ? 'text-red-600' :
+                          goal.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
+                        }`}>
+                          {goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1)}
+                        </div>
                       </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedGoal(goal);
+                            setIsEditDialogOpen(true);
+                          }}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Goal
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setGoalToDelete(goal)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Goal
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </CardHeader>
