@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const transactions = await storage.getWalletTransactions(walletId, limit, offset);
+      const transactions = await storage.getWalletTransactions(walletId, { limit, offset });
       res.json(transactions);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -471,6 +471,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Budget routes
+  app.get('/api/budgets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const budgets = await storage.getUserBudgets(userId);
+      res.json(budgets);
+    } catch (error) {
+      console.error("Error fetching user budgets:", error);
+      res.status(500).json({ message: "Failed to fetch budgets" });
+    }
+  });
+
   app.get('/api/wallets/:walletId/budgets', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
