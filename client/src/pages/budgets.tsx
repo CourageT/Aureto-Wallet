@@ -102,8 +102,8 @@ export default function Budgets() {
         title: "Success",
         description: "Budget created successfully!",
       });
-      setIsCreateOpen(false);
       form.reset();
+      setIsCreateOpen(false);
       refetchBudgets();
       queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
     },
@@ -132,6 +132,7 @@ export default function Budgets() {
         description: "Budget updated successfully!",
       });
       setEditingBudget(null);
+      setIsCreateOpen(false);
       form.reset();
       refetchBudgets();
       queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
@@ -173,6 +174,7 @@ export default function Budgets() {
     } else {
       createBudgetMutation.mutate(data);
     }
+    setIsCreateOpen(false);
   };
 
   const handleEdit = (budget: any) => {

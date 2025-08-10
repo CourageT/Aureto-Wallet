@@ -827,6 +827,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Additional Budget Management Routes
+  app.get('/api/budgets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userBudgets = await storage.getUserBudgets(userId);
+      res.json(userBudgets);
+    } catch (error) {
+      console.error("Error fetching user budgets:", error);
+      res.status(500).json({ message: "Failed to fetch budgets" });
+    }
+  });
+
+  app.put('/api/budgets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const budgetId = req.params.id;
+      
+      const existingBudget = await storage.getBudget(budgetId);
+      if (!existingBudget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(existingBudget.walletId, userId);
+      if (!member || !['owner', 'manager'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const updates = req.body;
+      if (updates.startDate) updates.startDate = new Date(updates.startDate);
+      if (updates.endDate) updates.endDate = new Date(updates.endDate);
+      
+      const updatedBudget = await storage.updateBudget(budgetId, updates);
+      res.json(updatedBudget);
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      res.status(500).json({ message: "Failed to update budget" });
+    }
+  });
+
+  app.delete('/api/budgets/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const budgetId = req.params.id;
+      
+      const existingBudget = await storage.getBudget(budgetId);
+      if (!existingBudget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(existingBudget.walletId, userId);
+      if (!member || !['owner', 'manager'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      await storage.deleteBudget(budgetId);
+      res.json({ message: "Budget deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      res.status(500).json({ message: "Failed to delete budget" });
+    }
+  });
+
 
 
   const httpServer = createServer(app);

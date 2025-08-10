@@ -10,6 +10,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: "fas fa-chart-bar" },
   { name: "Reports", href: "/reports", icon: "fas fa-chart-line" },
   { name: "Budgets", href: "/budgets", icon: "fas fa-calculator" },
+  { name: "Household Budget", href: "/household-budgets", icon: "fas fa-home" },
   { name: "Team", href: "/team", icon: "fas fa-users" },
   { name: "Settings", href: "/settings", icon: "fas fa-cog" },
 ];

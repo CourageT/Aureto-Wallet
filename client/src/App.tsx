@@ -12,6 +12,7 @@ import Goals from "@/pages/goals";
 import Analytics from "@/pages/analytics";
 import Reports from "@/pages/reports";
 import Budgets from "@/pages/budgets";
+import HouseholdBudgets from "@/pages/household-budgets";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/analytics" component={Analytics} />
           <Route path="/reports" component={Reports} />
           <Route path="/budgets" component={Budgets} />
+          <Route path="/household-budgets" component={HouseholdBudgets} />
           <Route path="/team" component={Team} />
           <Route path="/settings" component={Settings} />
         </>
