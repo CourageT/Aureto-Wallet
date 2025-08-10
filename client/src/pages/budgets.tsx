@@ -181,7 +181,7 @@ export default function Budgets() {
     setEditingBudget(budget);
     form.setValue("walletId", budget.walletId);
     form.setValue("categoryId", budget.categoryId);
-    form.setValue("amount", budget.amount.toString());
+    form.setValue("amount", parseFloat(budget.amount || 0).toString());
     form.setValue("period", budget.period);
     form.setValue("alertThreshold", budget.alertThreshold?.toString() || "80");
     setIsCreateOpen(true);
@@ -195,7 +195,8 @@ export default function Budgets() {
 
   const getBudgetStatus = (budget: any) => {
     const spent = budget.spent || 0;
-    const percentage = (spent / budget.amount) * 100;
+    const amount = parseFloat(budget.amount || 0);
+    const percentage = amount > 0 ? (spent / amount) * 100 : 0;
     
     if (percentage >= 100) return { status: "over", color: "red" };
     if (percentage >= (budget.alertThreshold || 80)) return { status: "warning", color: "yellow" };
@@ -412,7 +413,8 @@ export default function Budgets() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {budgets && budgets.map((budget: any) => {
                   const { status, color } = getBudgetStatus(budget);
-                  const percentage = Math.min((budget.spent / budget.amount) * 100, 100);
+                  const amount = parseFloat(budget.amount || 0);
+                  const percentage = amount > 0 ? Math.min((budget.spent / amount) * 100, 100) : 0;
                   
                   return (
                     <Card key={budget.id} className="relative">
@@ -455,7 +457,7 @@ export default function Budgets() {
                               ${budget.spent?.toFixed(2) || "0.00"}
                             </span>
                             <span className="text-sm text-gray-500">
-                              of ${budget.amount.toFixed(2)}
+                              of ${parseFloat(budget.amount || 0).toFixed(2)}
                             </span>
                           </div>
                           
@@ -477,7 +479,7 @@ export default function Budgets() {
                                 {percentage.toFixed(1)}% used
                               </span>
                               <span className="text-gray-500">
-                                ${(budget.amount - (budget.spent || 0)).toFixed(2)} left
+                                ${(parseFloat(budget.amount || 0) - (budget.spent || 0)).toFixed(2)} left
                               </span>
                             </div>
                           </div>

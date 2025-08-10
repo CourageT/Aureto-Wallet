@@ -57,7 +57,8 @@ export default function MonthlyBudget() {
           {Array.isArray(budgets) && budgets.length > 0 ? (
             budgets.slice(0, 3).map((budget: any) => {
               const spent = budget.spent || 0;
-              const percentage = (spent / budget.amount) * 100;
+              const amount = parseFloat(budget.amount || 0);
+              const percentage = amount > 0 ? (spent / amount) * 100 : 0;
               return (
                 <div key={budget.id}>
                   <div className="flex justify-between text-sm mb-2">
@@ -66,7 +67,7 @@ export default function MonthlyBudget() {
                       {budget.category?.name}
                     </span>
                     <span className="font-medium">
-                      ${spent.toFixed(0)} / ${budget.amount.toFixed(0)}
+                      ${spent.toFixed(0)} / ${amount.toFixed(0)}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
