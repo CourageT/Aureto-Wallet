@@ -33,14 +33,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/seed-categories', isAuthenticated, async (req: any, res) => {
     try {
       const defaultCategories = [
-        { name: 'Housing', icon: 'home', color: '#3B82F6', isDefault: true },
-        { name: 'Food & Dining', icon: 'shopping-cart', color: '#EF4444', isDefault: true },
-        { name: 'Transportation', icon: 'car', color: '#10B981', isDefault: true },
-        { name: 'Healthcare', icon: 'heart', color: '#F59E0B', isDefault: true },
-        { name: 'Entertainment', icon: 'film', color: '#8B5CF6', isDefault: true },
-        { name: 'Personal Care', icon: 'user', color: '#06B6D4', isDefault: true },
-        { name: 'Education', icon: 'book', color: '#84CC16', isDefault: true },
-        { name: 'Miscellaneous', icon: 'more-horizontal', color: '#6B7280', isDefault: true },
+        { name: 'Housing', icon: '🏠', color: '#3B82F6', isDefault: true },
+        { name: 'Food & Dining', icon: '🍽️', color: '#EF4444', isDefault: true },
+        { name: 'Transportation', icon: '🚗', color: '#10B981', isDefault: true },
+        { name: 'Healthcare', icon: '🏥', color: '#F59E0B', isDefault: true },
+        { name: 'Entertainment', icon: '🎬', color: '#8B5CF6', isDefault: true },
+        { name: 'Personal Care', icon: '💅', color: '#06B6D4', isDefault: true },
+        { name: 'Education', icon: '📚', color: '#84CC16', isDefault: true },
+        { name: 'Miscellaneous', icon: '📋', color: '#6B7280', isDefault: true },
       ];
 
       for (const category of defaultCategories) {
