@@ -417,6 +417,8 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 export const insertBudgetSchema = createInsertSchema(budgets).omit({
   id: true,
   createdAt: true,
+}).extend({
+  amount: z.union([z.string(), z.number()]).transform((val) => String(val)),
 });
 
 export const insertWalletInvitationSchema = createInsertSchema(walletInvitations).omit({
