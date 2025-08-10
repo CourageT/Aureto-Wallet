@@ -78,14 +78,17 @@ export interface IStorage {
   // Transaction operations
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransaction(id: string): Promise<TransactionWithDetails | undefined>;
-  getWalletTransactions(walletId: string, limit?: number, offset?: number): Promise<TransactionWithDetails[]>;
+  getWalletTransactions(walletId: string, options?: { limit?: number; offset?: number; days?: number }): Promise<TransactionWithDetails[]>;
   getUserTransactions(userId: string, limit?: number, offset?: number): Promise<TransactionWithDetails[]>;
   updateTransaction(id: string, updates: Partial<InsertTransaction>): Promise<Transaction>;
   deleteTransaction(id: string): Promise<void>;
 
   // Budget operations
   createBudget(budget: InsertBudget): Promise<Budget>;
+  getBudget(id: string): Promise<Budget | undefined>;
+  getUserBudgets(userId: string): Promise<Budget[]>;
   getWalletBudgets(walletId: string): Promise<Budget[]>;
+  getBudgetSpent(budgetId: string): Promise<number>;
   updateBudget(id: string, updates: Partial<InsertBudget>): Promise<Budget>;
   deleteBudget(id: string): Promise<void>;
 
@@ -130,6 +133,38 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
+    const [preferences] = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId));
+    return preferences;
+  }
+
+  async upsertUserPreferences(userId: string, preferences: InsertUserPreferences): Promise<UserPreferences> {
+    const [upsertedPreferences] = await db
+      .insert(userPreferences)
+      .values({ ...preferences, userId })
+      .onConflictDoUpdate({
+        target: userPreferences.userId,
+        set: {
+          ...preferences,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return upsertedPreferences;
   }
 
   // Wallet operations
@@ -381,7 +416,8 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getWalletTransactions(walletId: string, limit = 50, offset = 0): Promise<TransactionWithDetails[]> {
+  async getWalletTransactions(walletId: string, options: { limit?: number; offset?: number; days?: number } = {}): Promise<TransactionWithDetails[]> {
+    const { limit = 50, offset = 0, days } = options;
     const results = await db
       .select({
         transaction: transactions,
@@ -393,7 +429,14 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(categories, eq(transactions.categoryId, categories.id))
       .innerJoin(wallets, eq(transactions.walletId, wallets.id))
       .innerJoin(users, eq(transactions.createdBy, users.id))
-      .where(eq(transactions.walletId, walletId))
+      .where(
+        days 
+          ? and(
+              eq(transactions.walletId, walletId),
+              gte(transactions.date, sql`NOW() - INTERVAL '${sql.raw(days.toString())} days'`)
+            )
+          : eq(transactions.walletId, walletId)
+      )
       .orderBy(desc(transactions.date), desc(transactions.createdAt))
       .limit(limit)
       .offset(offset);
@@ -488,6 +531,69 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBudget(id: string): Promise<void> {
     await db.delete(budgets).where(eq(budgets.id, id));
+  }
+
+  async getBudget(id: string): Promise<Budget | undefined> {
+    const [budget] = await db.select().from(budgets).where(eq(budgets.id, id));
+    return budget;
+  }
+
+  async getUserBudgets(userId: string): Promise<Budget[]> {
+    const results = await db
+      .select({
+        budget: budgets,
+        category: categories,
+        wallet: wallets,
+      })
+      .from(budgets)
+      .innerJoin(categories, eq(budgets.categoryId, categories.id))
+      .innerJoin(wallets, eq(budgets.walletId, wallets.id))
+      .innerJoin(walletMembers, eq(wallets.id, walletMembers.walletId))
+      .where(
+        and(
+          eq(walletMembers.userId, userId),
+          eq(budgets.isActive, true)
+        )
+      )
+      .orderBy(desc(budgets.createdAt));
+
+    // Calculate spent amounts and return enriched budgets
+    const enrichedBudgets = await Promise.all(
+      results.map(async ({ budget, category, wallet }) => {
+        const spent = await this.getBudgetSpent(budget.id);
+        return {
+          ...budget,
+          category,
+          wallet,
+          spent,
+        };
+      })
+    );
+
+    return enrichedBudgets;
+  }
+
+  async getBudgetSpent(budgetId: string): Promise<number> {
+    const [budget] = await db.select().from(budgets).where(eq(budgets.id, budgetId));
+    
+    if (!budget) return 0;
+
+    const results = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(CAST(${transactions.amount} AS DECIMAL)), 0)`,
+      })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.walletId, budget.walletId),
+          eq(transactions.categoryId, budget.categoryId),
+          eq(transactions.type, 'expense'),
+          gte(transactions.date, budget.startDate),
+          budget.endDate ? lte(transactions.date, budget.endDate) : sql`TRUE`
+        )
+      );
+
+    return Number(results[0]?.total || 0);
   }
 
   // Invitation operations
@@ -604,33 +710,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  // Enhanced user operations
-  async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({...updates, updatedAt: new Date()})
-      .where(eq(users.id, id))
-      .returning();
-    return user;
-  }
 
-  // User preferences operations
-  async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
-    const [prefs] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
-    return prefs;
-  }
-
-  async upsertUserPreferences(userId: string, preferences: InsertUserPreferences): Promise<UserPreferences> {
-    const [prefs] = await db
-      .insert(userPreferences)
-      .values({...preferences, userId})
-      .onConflictDoUpdate({
-        target: userPreferences.userId,
-        set: {...preferences, updatedAt: new Date()},
-      })
-      .returning();
-    return prefs;
-  }
 
   // Goal operations
   async getUserGoals(userId: string): Promise<Goal[]> {
