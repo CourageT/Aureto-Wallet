@@ -184,14 +184,15 @@ export default function HouseholdBudgets() {
 
   const getBudgetStatus = (budget: any) => {
     const spent = budget.spent || 0;
-    const percentage = (spent / budget.amount) * 100;
+    const amount = parseFloat(budget.amount || 0);
+    const percentage = amount > 0 ? (spent / amount) * 100 : 0;
     
     if (percentage >= 100) return { status: "over", color: "red", message: "Over Budget" };
     if (percentage >= (budget.alertThreshold || 80)) return { status: "warning", color: "yellow", message: "Near Limit" };
     return { status: "good", color: "green", message: "On Track" };
   };
 
-  const totalBudgeted = budgetsArray.reduce((sum: number, budget: any) => sum + (budget.amount || 0), 0);
+  const totalBudgeted = budgetsArray.reduce((sum: number, budget: any) => sum + parseFloat(budget.amount || 0), 0);
   const totalSpent = budgetsArray.reduce((sum: number, budget: any) => sum + (budget.spent || 0), 0);
   const overallPercentage = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
 
@@ -304,7 +305,7 @@ export default function HouseholdBudgets() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {budgetsArray.map((budget: any) => {
                       const { status, color, message } = getBudgetStatus(budget);
-                      const percentage = Math.min((budget.spent || 0) / budget.amount * 100, 100);
+                      const percentage = Math.min((budget.spent || 0) / parseFloat(budget.amount || 0) * 100, 100);
                       
                       return (
                         <Card key={budget.id} className="hover:shadow-md transition-shadow">
@@ -322,7 +323,7 @@ export default function HouseholdBudgets() {
                           <CardContent>
                             <div className="space-y-3">
                               <div className="flex justify-between text-sm">
-                                <span>Budget: ${budget.amount.toFixed(2)}</span>
+                                <span>Budget: ${parseFloat(budget.amount || 0).toFixed(2)}</span>
                                 <span>Spent: ${(budget.spent || 0).toFixed(2)}</span>
                               </div>
                               <Progress value={percentage} className={`h-2 ${status === 'good' ? 'bg-green-100' : status === 'warning' ? 'bg-yellow-100' : 'bg-red-100'}`} />
@@ -331,7 +332,7 @@ export default function HouseholdBudgets() {
                                   {percentage.toFixed(1)}% used
                                 </span>
                                 <span className="text-gray-500">
-                                  ${(budget.amount - (budget.spent || 0)).toFixed(2)} left
+                                  ${(parseFloat(budget.amount || 0) - (budget.spent || 0)).toFixed(2)} left
                                 </span>
                               </div>
                             </div>

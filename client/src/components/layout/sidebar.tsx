@@ -37,11 +37,9 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.name} href={item.href}>
-              <a className={cn("sidebar-nav-item", isActive && "active")}>
-                <i className={`${item.icon} w-5`}></i>
-                <span>{item.name}</span>
-              </a>
+            <Link key={item.name} href={item.href} className={cn("sidebar-nav-item", isActive && "active")}>
+              <i className={`${item.icon} w-5`}></i>
+              <span>{item.name}</span>
             </Link>
           );
         })}
