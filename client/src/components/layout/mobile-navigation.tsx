@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   Target,
-  FileText
+  FileText,
+  PiggyBank
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +19,7 @@ const navigationItems = [
   { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/transactions', icon: CreditCard, label: 'Transactions' },
   { href: '/wallets', icon: Wallet, label: 'Wallets' },
+  { href: '/budgets', icon: PiggyBank, label: 'Budgets' },
   { href: '/goals', icon: Target, label: 'Goals' },
   { href: '/analytics', icon: BarChart3, label: 'Analytics' },
   { href: '/reports', icon: FileText, label: 'Reports' },
@@ -41,7 +43,7 @@ export default function MobileNavigation() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-lg font-bold">💰</span>
             </div>
-            <h1 className="text-lg font-semibold text-gray-900">SpendWise Pro</h1>
+            <h1 className="text-lg font-semibold text-gray-900">SendWise</h1>
           </div>
           
           <Button
@@ -71,7 +73,7 @@ export default function MobileNavigation() {
               <span className="text-white text-xl">💰</span>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">SpendWise Pro</h2>
+              <h2 className="text-lg font-semibold text-gray-900">SendWise</h2>
               <p className="text-sm text-gray-500">Expense Tracker</p>
             </div>
           </div>
@@ -119,7 +121,7 @@ export default function MobileNavigation() {
       {/* Bottom Navigation for Mobile - Always visible */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 mobile-bottom shadow-lg">
         <div className="flex justify-around py-2 mobile-safe">
-          {navigationItems.slice(0, 4).map((item) => {
+          {navigationItems.filter(item => ['/', '/transactions', '/wallets', '/budgets', '/goals'].includes(item.href)).map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
             
