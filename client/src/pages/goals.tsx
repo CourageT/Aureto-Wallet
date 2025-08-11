@@ -218,7 +218,59 @@ export default function Goals() {
             <TopBar title="Goals" subtitle="Track your progress towards financial milestones" />
           </div>
           <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6">
-            <div className="text-center py-8">Loading goals...</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+                  {/* Goal header skeleton */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                      <div>
+                        <div className="h-5 bg-gray-200 rounded w-24 mb-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                  </div>
+
+                  {/* Description skeleton */}
+                  <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+                  
+                  {/* Progress bar skeleton */}
+                  <div className="mb-4">
+                    <div className="flex justify-between mb-2">
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      <div className="h-3 bg-gray-200 rounded w-12"></div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3"></div>
+                  </div>
+
+                  {/* Financial details skeleton */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div className="h-3 bg-gray-200 rounded w-12 mb-1"></div>
+                      <div className="h-5 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div>
+                      <div className="h-3 bg-gray-200 rounded w-12 mb-1"></div>
+                      <div className="h-5 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+
+                  {/* Remaining amount skeleton */}
+                  <div className="mb-4">
+                    <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                    <div className="h-5 bg-gray-200 rounded w-20"></div>
+                  </div>
+
+                  {/* Action buttons skeleton */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-9 bg-gray-200 rounded"></div>
+                    <div className="flex-1 h-9 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </main>
       </div>
