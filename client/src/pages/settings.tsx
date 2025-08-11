@@ -267,13 +267,13 @@ export default function Settings() {
 
               {/* Profile Reset Section */}
               <div className="mt-6 pt-6 border-t border-red-200">
-                <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
-                  <div className="flex items-start justify-between">
-                    <div className="flex">
+                <div className="bg-red-50 border border-red-200 p-4 md:p-6 rounded-lg">
+                  <div className="space-y-4">
+                    <div className="flex items-start">
                       <div className="flex-shrink-0">
                         <i className="fas fa-exclamation-triangle text-red-500 text-xl"></i>
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 flex-1">
                         <h3 className="text-lg font-semibold text-red-800 mb-2">
                           Danger Zone
                         </h3>
@@ -291,12 +291,12 @@ export default function Settings() {
                         </div>
                       </div>
                     </div>
-                    <div>
+                    <div className="flex justify-center md:justify-end">
                       <Button
                         onClick={() => setShowResetDialog(true)}
                         variant="destructive"
                         size="lg"
-                        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 shadow-lg"
+                        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 shadow-lg w-full md:w-auto"
                       >
                         <i className="fas fa-trash mr-2"></i>
                         Reset Profile
@@ -597,23 +597,23 @@ export default function Settings() {
 
       {/* Profile Reset Confirmation Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Reset Profile</DialogTitle>
+            <DialogTitle className="text-red-600 text-xl font-bold">Reset Profile</DialogTitle>
             <DialogDescription className="text-gray-600">
               This action will permanently delete all your data including wallets, transactions, 
               budgets, goals, and preferences. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="bg-red-50 p-4 rounded-md">
+          <div className="space-y-4 py-4">
+            <div className="bg-red-50 p-4 rounded-md border border-red-200">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <i className="fas fa-exclamation-triangle text-red-400"></i>
+                  <i className="fas fa-exclamation-triangle text-red-500 text-lg"></i>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
+                  <h3 className="text-sm font-semibold text-red-800">
                     Warning: This will delete everything
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
@@ -629,27 +629,28 @@ export default function Settings() {
             </div>
             
             <div>
-              <Label htmlFor="confirmation" className="text-sm font-medium">
-                To confirm, type: <code className="bg-gray-100 px-2 py-1 rounded text-red-600">delete-all-data-by-courage</code>
+              <Label htmlFor="confirmation" className="text-sm font-medium text-gray-900">
+                To confirm, type: <code className="bg-gray-100 px-2 py-1 rounded text-red-600 font-mono">delete-all-data-by-courage</code>
               </Label>
               <Input
                 id="confirmation"
                 value={resetConfirmationText}
                 onChange={(e) => setResetConfirmationText(e.target.value)}
                 placeholder="Type the confirmation text exactly..."
-                className="mt-2"
+                className="mt-2 border-2 focus:border-red-500"
                 autoComplete="off"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3 pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => {
                 setShowResetDialog(false);
                 setResetConfirmationText('');
               }}
+              className="flex-1 md:flex-initial"
             >
               Cancel
             </Button>
@@ -660,7 +661,7 @@ export default function Settings() {
                 resetConfirmationText !== 'delete-all-data-by-courage' || 
                 resetProfileMutation.isPending
               }
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold flex-1 md:flex-initial"
             >
               {resetProfileMutation.isPending ? (
                 <>

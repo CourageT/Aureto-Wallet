@@ -821,19 +821,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Notification operations
-  async getUserNotifications(userId: string, options = {}): Promise<Notification[]> {
+  async getUserNotifications(userId: string, options: { page?: number; limit?: number; unreadOnly?: boolean } = {}): Promise<Notification[]> {
     const { page = 1, limit = 20, unreadOnly = false } = options;
     
-    let query = db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId));
-    
+    const whereConditions = [eq(notifications.userId, userId)];
     if (unreadOnly) {
-      query = query.where(eq(notifications.isRead, false));
+      whereConditions.push(eq(notifications.isRead, false));
     }
     
-    return await query
+    return await db
+      .select()
+      .from(notifications)
+      .where(and(...whereConditions))
       .orderBy(desc(notifications.createdAt))
       .limit(limit)
       .offset((page - 1) * limit);
@@ -865,7 +864,7 @@ export class DatabaseStorage implements IStorage {
   // Enhanced budget operations
 
   // AI & Analytics operations
-  async getFinancialSummary(userId: string, options = {}): Promise<any> {
+  async getFinancialSummary(userId: string, options: { limit?: number; offset?: number; days?: number } = {}): Promise<any> {
     const userWallets = await this.getUserWallets(userId);
     
     let summary = {
@@ -877,7 +876,7 @@ export class DatabaseStorage implements IStorage {
     };
 
     for (const wallet of userWallets) {
-      const walletTransactions = await this.getWalletTransactions(wallet.id, 50);
+      const walletTransactions = await this.getWalletTransactions(wallet.id, { limit: 50 });
       
       for (const tx of walletTransactions) {
         const amount = parseFloat(tx.amount);
@@ -894,12 +893,12 @@ export class DatabaseStorage implements IStorage {
     return summary;
   }
 
-  async getSpendingAnalysis(userId: string, options = {}): Promise<any> {
+  async getSpendingAnalysis(userId: string, options: { limit?: number; offset?: number; days?: number } = {}): Promise<any> {
     const userWallets = await this.getUserWallets(userId);
     const categorySpending: { [key: string]: number } = {};
     
     for (const wallet of userWallets) {
-      const transactions = await this.getWalletTransactions(wallet.id, 50);
+      const transactions = await this.getWalletTransactions(wallet.id, { limit: 50 });
       
       for (const tx of transactions) {
         if (tx.type === 'expense') {
@@ -917,12 +916,12 @@ export class DatabaseStorage implements IStorage {
     return { topCategories, insights: [] };
   }
 
-  async getCategoryBreakdown(userId: string, options = {}): Promise<any> {
+  async getCategoryBreakdown(userId: string, options: { limit?: number; offset?: number; days?: number } = {}): Promise<any> {
     const userWallets = await this.getUserWallets(userId);
     const breakdown: { [key: string]: { amount: number; count: number } } = {};
     
     for (const wallet of userWallets) {
-      const transactions = await this.getWalletTransactions(wallet.id, 100);
+      const transactions = await this.getWalletTransactions(wallet.id, { limit: 100 });
       
       for (const tx of transactions) {
         const categoryName = tx.category.name;
