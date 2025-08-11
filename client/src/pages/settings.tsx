@@ -196,8 +196,8 @@ export default function Settings() {
     createCategoryMutation.mutate(data);
   };
 
-  const userCategories = categories?.filter((cat: any) => !cat.isDefault) || [];
-  const defaultCategories = categories?.filter((cat: any) => cat.isDefault) || [];
+  const userCategories = (categories as any[])?.filter((cat: any) => !cat.isDefault) || [];
+  const defaultCategories = (categories as any[])?.filter((cat: any) => cat.isDefault) || [];
 
   return (
     <>
@@ -229,7 +229,7 @@ export default function Settings() {
                   <Input
                     id="email"
                     type="email"
-                    value={user?.email || ''}
+                    value={(user as any)?.email || ''}
                     disabled
                     className="mt-2"
                   />
@@ -240,7 +240,7 @@ export default function Settings() {
                   <Label htmlFor="name">Display Name</Label>
                   <Input
                     id="name"
-                    value={user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : ''}
+                    value={(user as any)?.firstName ? `${(user as any).firstName} ${(user as any).lastName || ''}`.trim() : ''}
                     disabled
                     className="mt-2"
                   />
@@ -528,7 +528,7 @@ export default function Settings() {
                   )}
 
                   {/* Empty State */}
-                  {categories?.length === 0 && (
+                  {(categories as any[])?.length === 0 && (
                     <div className="text-center py-8">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i className="fas fa-tags text-gray-400 text-xl"></i>

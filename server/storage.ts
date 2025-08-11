@@ -1050,7 +1050,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
     
     // 12. Delete custom categories created by user
-    await db.delete(categories).where(eq(categories.userId, userId));
+    await db.delete(categories).where(eq(categories.createdBy, userId));
     
     // Note: We don't delete the user record itself as it's managed by authentication
   }
