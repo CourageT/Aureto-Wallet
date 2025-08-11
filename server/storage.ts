@@ -628,15 +628,22 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(budgets.createdAt));
 
-    // Calculate spent amounts and return enriched budgets
+    // Calculate spent amounts, item counts and return enriched budgets
     const enrichedBudgets = await Promise.all(
       results.map(async ({ budget, category, wallet }) => {
         const spent = await this.getBudgetSpent(budget.id);
+        const itemCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(budgetItems)
+          .where(eq(budgetItems.budgetId, budget.id));
+        const itemCount = Number(itemCountResult[0]?.count || 0);
+        
         return {
           ...budget,
           category,
           wallet,
           spent,
+          itemCount,
         };
       })
     );
