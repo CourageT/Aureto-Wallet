@@ -32,7 +32,17 @@ const budgetSchema = z.object({
   alertThreshold: z.string().optional(),
 });
 
+const budgetItemSchema = z.object({
+  name: z.string().min(1, "Item name is required"),
+  description: z.string().optional(),
+  unit: z.string().optional(),
+  plannedQuantity: z.string().optional(),
+  plannedUnitPrice: z.string().optional(),
+  plannedAmount: z.string().min(1, "Planned amount is required"),
+});
+
 type BudgetFormData = z.infer<typeof budgetSchema>;
+type BudgetItemFormData = z.infer<typeof budgetItemSchema>;
 
 export default function Budgets() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,8 +54,12 @@ export default function Budgets() {
   const [editingBudget, setEditingBudget] = useState<any>(null);
   const [selectedBudget, setSelectedBudget] = useState<any>(null);
   const [currentBudgetType, setCurrentBudgetType] = useState<string>("category");
+  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Form
+  // Forms
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -57,6 +71,18 @@ export default function Budgets() {
       period: "monthly",
       budgetType: "category",
       alertThreshold: "80",
+    },
+  });
+
+  const itemForm = useForm<BudgetItemFormData>({
+    resolver: zodResolver(budgetItemSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      unit: "items",
+      plannedQuantity: "1",
+      plannedUnitPrice: "",
+      plannedAmount: "",
     },
   });
 
@@ -76,7 +102,7 @@ export default function Budgets() {
     enabled: isAuthenticated,
   });
 
-  // Mutations
+  // Budget Mutations
   const createBudgetMutation = useMutation({
     mutationFn: async (budgetData: any) => {
       return await apiRequest("/api/budgets", "POST", budgetData);
@@ -142,6 +168,52 @@ export default function Budgets() {
     },
   });
 
+  // Budget Item Mutations
+  const createItemMutation = useMutation({
+    mutationFn: async ({ budgetId, data }: { budgetId: string; data: any }) => {
+      return await apiRequest(`/api/budgets/${budgetId}/items`, "POST", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Budget item created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsItemDialogOpen(false);
+      itemForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create budget item",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest(`/api/budget-items/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Budget item updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsItemDialogOpen(false);
+      setEditingItem(null);
+      itemForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update budget item",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper functions
   const calculatePeriodDates = (period: string) => {
     const now = new Date();
@@ -197,6 +269,21 @@ export default function Budgets() {
       updateBudgetMutation.mutate({ id: editingBudget.id, budgetData });
     } else {
       createBudgetMutation.mutate(budgetData);
+    }
+  };
+
+  const onItemSubmit = (data: BudgetItemFormData) => {
+    const itemData = {
+      ...data,
+      plannedQuantity: data.plannedQuantity ? parseFloat(data.plannedQuantity) : 1,
+      plannedUnitPrice: data.plannedUnitPrice ? parseFloat(data.plannedUnitPrice) : 0,
+      plannedAmount: parseFloat(data.plannedAmount),
+    };
+
+    if (editingItem) {
+      updateItemMutation.mutate({ id: editingItem.id, data: itemData });
+    } else if (selectedBudget) {
+      createItemMutation.mutate({ budgetId: selectedBudget.id, data: itemData });
     }
   };
 
@@ -605,18 +692,165 @@ export default function Budgets() {
             <BudgetItemManager
               budget={selectedBudget}
               onAddItem={() => {
-                // Handle add item
+                setEditingItem(null);
+                itemForm.reset();
+                setIsItemDialogOpen(true);
               }}
               onEditItem={(item) => {
-                // Handle edit item
+                setEditingItem(item);
+                itemForm.setValue("name", item.name || "");
+                itemForm.setValue("description", item.description || "");
+                itemForm.setValue("unit", item.unit || "items");
+                itemForm.setValue("plannedQuantity", item.plannedQuantity?.toString() || "1");
+                itemForm.setValue("plannedUnitPrice", item.plannedUnitPrice?.toString() || "");
+                itemForm.setValue("plannedAmount", item.plannedAmount?.toString() || "");
+                setIsItemDialogOpen(true);
               }}
               onRecordPurchase={(item) => {
-                // Handle record purchase
+                setSelectedItem(item);
+                setIsPurchaseDialogOpen(true);
               }}
             />
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Budget Item Create/Edit Dialog */}
+      <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "Edit Budget Item" : "Add Budget Item"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Form {...itemForm}>
+            <form onSubmit={itemForm.handleSubmit(onItemSubmit)} className="space-y-4">
+              <FormField
+                control={itemForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Item Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Milk, Bread, etc." {...field} className="min-h-[44px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={itemForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Item details..." {...field} className="min-h-[60px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={itemForm.control}
+                  name="plannedQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" placeholder="1" {...field} className="min-h-[44px]" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={itemForm.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="min-h-[44px]">
+                            <SelectValue placeholder="Unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="items">Items</SelectItem>
+                          <SelectItem value="kg">Kilograms</SelectItem>
+                          <SelectItem value="lbs">Pounds</SelectItem>
+                          <SelectItem value="liters">Liters</SelectItem>
+                          <SelectItem value="gallons">Gallons</SelectItem>
+                          <SelectItem value="boxes">Boxes</SelectItem>
+                          <SelectItem value="bottles">Bottles</SelectItem>
+                          <SelectItem value="packs">Packs</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={itemForm.control}
+                name="plannedUnitPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Price (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} className="min-h-[44px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={itemForm.control}
+                name="plannedAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Planned Total Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} className="min-h-[44px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsItemDialogOpen(false)}
+                  className="flex-1 min-h-[44px]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createItemMutation.isPending || updateItemMutation.isPending}
+                  className="flex-1 min-h-[44px]"
+                >
+                  {createItemMutation.isPending || updateItemMutation.isPending
+                    ? "Saving..."
+                    : editingItem
+                    ? "Update Item"
+                    : "Add Item"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
