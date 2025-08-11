@@ -133,79 +133,86 @@ export default function BudgetItemManager({ budget, onAddItem, onEditItem, onRec
             return (
               <Card key={item.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{item.name}</h4>
+                  <div className="space-y-3">
+                    {/* Header with title and badge */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <h4 className="font-medium truncate">{item.name}</h4>
                         <Badge 
                           variant={status === "pending" ? "outline" : status === "good" ? "default" : "destructive"}
-                          className="text-xs"
+                          className="text-xs shrink-0"
                         >
                           {status === "pending" ? "Not Purchased" : status === "good" ? "On Budget" : "Over Budget"}
                         </Badge>
                       </div>
                       
-                      {item.unit && item.plannedQuantity && (
-                        <div className="text-sm text-gray-500 mb-2">
-                          {item.plannedQuantity} {item.unit}
-                          {item.plannedUnitPrice && ` @ $${parseFloat(item.plannedUnitPrice).toFixed(2)} each`}
-                        </div>
-                      )}
-
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Planned:</span>
-                          <span className="font-medium">${planned.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Actual:</span>
-                          <span className={`font-medium ${color === "red" ? "text-red-600" : color === "green" ? "text-green-600" : "text-gray-600"}`}>
-                            ${actual.toFixed(2)}
-                          </span>
-                        </div>
+                      <div className="flex gap-1 shrink-0 ml-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onRecordPurchase(item)}
+                          title="Record Purchase"
+                          className="h-8 w-8 p-0"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditItem(item)}
+                          title="Edit Item"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(item.id)}
+                          title="Delete Item"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
                       </div>
+                    </div>
+                    
+                    {/* Quantity and unit price info */}
+                    {item.unit && item.plannedQuantity && (
+                      <div className="text-sm text-gray-500">
+                        {item.plannedQuantity} {item.unit}
+                        {item.plannedUnitPrice && ` @ $${parseFloat(item.plannedUnitPrice).toFixed(2)} each`}
+                      </div>
+                    )}
 
-                      {actual > 0 && (
-                        <div className="mt-2">
-                          <Progress 
-                            value={progress} 
-                            className={`h-2 ${color === "red" ? "bg-red-100" : "bg-green-100"}`}
-                          />
-                          {variance.amount > 0 && (
-                            <div className={`text-xs mt-1 ${variance.isOver ? "text-red-600" : "text-green-600"}`}>
-                              {variance.isOver ? "Over" : "Under"} by ${variance.amount.toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    {/* Planned vs Actual amounts */}
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Planned:</span>
+                        <span className="font-medium">${planned.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Actual:</span>
+                        <span className={`font-medium ${color === "red" ? "text-red-600" : color === "green" ? "text-green-600" : "text-gray-600"}`}>
+                          ${actual.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex gap-1 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRecordPurchase(item)}
-                        title="Record Purchase"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEditItem(item)}
-                        title="Edit Item"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(item.id)}
-                        title="Delete Item"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
+                    {/* Progress bar and variance */}
+                    {actual > 0 && (
+                      <div className="space-y-1">
+                        <Progress 
+                          value={progress} 
+                          className={`h-2 ${color === "red" ? "bg-red-100" : "bg-green-100"}`}
+                        />
+                        {variance.amount > 0 && (
+                          <div className={`text-xs ${variance.isOver ? "text-red-600" : "text-green-600"}`}>
+                            {variance.isOver ? "Over" : "Under"} by ${variance.amount.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
