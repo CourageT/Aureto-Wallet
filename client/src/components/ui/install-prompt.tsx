@@ -29,7 +29,7 @@ export default function InstallPrompt() {
           
           <div className="flex-1 space-y-2">
             <h3 className="text-sm font-semibold text-blue-900">
-              Install SpendWise Pro
+              Install SendWise
             </h3>
             <p className="text-xs text-blue-700">
               Get quick access and work offline by installing our app
