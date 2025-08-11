@@ -168,6 +168,29 @@ export default function Budgets() {
     },
   });
 
+  // Purchase Mutation
+  const recordPurchaseMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest(`/api/budget-items/${id}/purchase`, "PUT", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Purchase recorded successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsPurchaseDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to record purchase",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Budget Item Mutations
   const createItemMutation = useMutation({
     mutationFn: async ({ budgetId, data }: { budgetId: string; data: any }) => {
@@ -284,6 +307,18 @@ export default function Budgets() {
       updateItemMutation.mutate({ id: editingItem.id, data: itemData });
     } else if (selectedBudget) {
       createItemMutation.mutate({ budgetId: selectedBudget.id, data: itemData });
+    }
+  };
+
+  const onPurchaseSubmit = (data: any) => {
+    if (selectedItem) {
+      const purchaseData = {
+        actualQuantity: parseFloat(data.actualQuantity),
+        actualUnitPrice: parseFloat(data.actualUnitPrice),
+        actualAmount: parseFloat(data.actualAmount),
+        notes: data.notes,
+      };
+      recordPurchaseMutation.mutate({ id: selectedItem.id, data: purchaseData });
     }
   };
 
@@ -851,6 +886,24 @@ export default function Budgets() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Purchase Recording Dialog */}
+      {selectedItem && (
+        <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Record Purchase - {selectedItem.name}</DialogTitle>
+            </DialogHeader>
+            
+            <PurchaseForm
+              item={selectedItem}
+              onSubmit={onPurchaseSubmit}
+              onCancel={() => setIsPurchaseDialogOpen(false)}
+              isLoading={recordPurchaseMutation.isPending}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
