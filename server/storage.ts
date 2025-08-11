@@ -5,6 +5,7 @@ import {
   categories,
   transactions,
   budgets,
+  budgetItems,
   walletInvitations,
   goals,
   notifications,
@@ -23,6 +24,8 @@ import {
   type InsertTransaction,
   type Budget,
   type InsertBudget,
+  type BudgetItem,
+  type InsertBudgetItem,
   type WalletInvitation,
   type InsertWalletInvitation,
   type Goal,
@@ -86,11 +89,19 @@ export interface IStorage {
   // Budget operations
   createBudget(budget: InsertBudget): Promise<Budget>;
   getBudget(id: string): Promise<Budget | undefined>;
+  getBudgetWithItems(id: string): Promise<(Budget & { items: BudgetItem[] }) | undefined>;
   getUserBudgets(userId: string): Promise<Budget[]>;
   getWalletBudgets(walletId: string): Promise<Budget[]>;
   getBudgetSpent(budgetId: string): Promise<number>;
   updateBudget(id: string, updates: Partial<InsertBudget>): Promise<Budget>;
   deleteBudget(id: string): Promise<void>;
+
+  // Budget item operations
+  createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem>;
+  getBudgetItems(budgetId: string): Promise<BudgetItem[]>;
+  updateBudgetItem(id: string, updates: Partial<InsertBudgetItem>): Promise<BudgetItem>;
+  deleteBudgetItem(id: string): Promise<void>;
+  updateBudgetItemPurchase(id: string, actualQuantity: number, actualUnitPrice: number, actualAmount: number, notes?: string): Promise<BudgetItem>;
 
   // Invitation operations
   createWalletInvitation(invitation: InsertWalletInvitation): Promise<WalletInvitation>;
@@ -530,12 +541,72 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBudget(id: string): Promise<void> {
+    // Delete budget items first (cascade delete)
+    await db.delete(budgetItems).where(eq(budgetItems.budgetId, id));
     await db.delete(budgets).where(eq(budgets.id, id));
+  }
+
+  // Budget item operations
+  async createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem> {
+    const [newItem] = await db.insert(budgetItems).values(item).returning();
+    return newItem;
+  }
+
+  async getBudgetItems(budgetId: string): Promise<BudgetItem[]> {
+    return await db.select().from(budgetItems).where(eq(budgetItems.budgetId, budgetId));
+  }
+
+  async updateBudgetItem(id: string, updates: Partial<InsertBudgetItem>): Promise<BudgetItem> {
+    const [item] = await db
+      .update(budgetItems)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(budgetItems.id, id))
+      .returning();
+    return item;
+  }
+
+  async deleteBudgetItem(id: string): Promise<void> {
+    await db.delete(budgetItems).where(eq(budgetItems.id, id));
+  }
+
+  async updateBudgetItemPurchase(
+    id: string, 
+    actualQuantity: number, 
+    actualUnitPrice: number, 
+    actualAmount: number, 
+    notes?: string
+  ): Promise<BudgetItem> {
+    const [item] = await db
+      .update(budgetItems)
+      .set({
+        actualQuantity: actualQuantity.toString(),
+        actualUnitPrice: actualUnitPrice.toString(),
+        actualAmount: actualAmount.toString(),
+        isPurchased: true,
+        purchaseDate: new Date(),
+        notes,
+        updatedAt: new Date(),
+      })
+      .where(eq(budgetItems.id, id))
+      .returning();
+    return item;
   }
 
   async getBudget(id: string): Promise<Budget | undefined> {
     const [budget] = await db.select().from(budgets).where(eq(budgets.id, id));
     return budget;
+  }
+
+  async getBudgetWithItems(id: string): Promise<(Budget & { items: BudgetItem[] }) | undefined> {
+    const [budget] = await db.select().from(budgets).where(eq(budgets.id, id));
+    if (!budget) return undefined;
+    
+    const items = await db.select().from(budgetItems).where(eq(budgetItems.budgetId, id));
+    
+    return {
+      ...budget,
+      items,
+    };
   }
 
   async getUserBudgets(userId: string): Promise<Budget[]> {

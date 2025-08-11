@@ -98,13 +98,37 @@ export const budgets = pgTable("budgets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   walletId: varchar("wallet_id").notNull(),
   categoryId: varchar("category_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull().default('Budget'),
+  description: text("description"),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  period: varchar("period", { length: 20 }).notNull(), // 'monthly', 'weekly', 'yearly'
+  period: varchar("period", { length: 20 }).notNull(), // 'daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom'
+  budgetType: varchar("budget_type", { length: 20 }).notNull().default('category'), // 'category', 'detailed', 'mixed'
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
   isActive: boolean("is_active").notNull().default(true),
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Budget items table (for detailed item-level budgeting)
+export const budgetItems = pgTable("budget_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  budgetId: varchar("budget_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  unit: varchar("unit", { length: 50 }), // 'kg', 'liters', 'pieces', etc.
+  plannedQuantity: decimal("planned_quantity", { precision: 10, scale: 3 }),
+  plannedUnitPrice: decimal("planned_unit_price", { precision: 12, scale: 2 }),
+  plannedAmount: decimal("planned_amount", { precision: 12, scale: 2 }).notNull(),
+  actualQuantity: decimal("actual_quantity", { precision: 10, scale: 3 }).default('0'),
+  actualUnitPrice: decimal("actual_unit_price", { precision: 12, scale: 2 }).default('0'),
+  actualAmount: decimal("actual_amount", { precision: 12, scale: 2 }).default('0'),
+  isPurchased: boolean("is_purchased").notNull().default(false),
+  purchaseDate: timestamp("purchase_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Wallet invitations table
@@ -266,7 +290,7 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
 }));
 
-export const budgetsRelations = relations(budgets, ({ one }) => ({
+export const budgetsRelations = relations(budgets, ({ one, many }) => ({
   wallet: one(wallets, {
     fields: [budgets.walletId],
     references: [wallets.id],
@@ -278,6 +302,14 @@ export const budgetsRelations = relations(budgets, ({ one }) => ({
   creator: one(users, {
     fields: [budgets.createdBy],
     references: [users.id],
+  }),
+  items: many(budgetItems),
+}));
+
+export const budgetItemsRelations = relations(budgetItems, ({ one }) => ({
+  budget: one(budgets, {
+    fields: [budgetItems.budgetId],
+    references: [budgets.id],
   }),
 }));
 
@@ -348,6 +380,8 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
 export type Budget = typeof budgets.$inferSelect;
 export type InsertBudget = typeof budgets.$inferInsert;
+export type BudgetItem = typeof budgetItems.$inferSelect;
+export type InsertBudgetItem = typeof budgetItems.$inferInsert;
 export type WalletInvitation = typeof walletInvitations.$inferSelect;
 export type InsertWalletInvitation = typeof walletInvitations.$inferInsert;
 export type Goal = typeof goals.$inferSelect;
@@ -417,8 +451,22 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 export const insertBudgetSchema = createInsertSchema(budgets).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 }).extend({
   amount: z.union([z.string(), z.number()]).transform((val) => String(val)),
+});
+
+export const insertBudgetItemSchema = createInsertSchema(budgetItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  plannedQuantity: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
+  plannedUnitPrice: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
+  plannedAmount: z.union([z.string(), z.number()]).transform((val) => String(val)),
+  actualQuantity: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
+  actualUnitPrice: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
+  actualAmount: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
 });
 
 export const insertWalletInvitationSchema = createInsertSchema(walletInvitations).omit({

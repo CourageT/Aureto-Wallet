@@ -1,12 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { budgetItems } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import {
   insertWalletSchema,
   insertTransactionSchema,
   insertCategorySchema,
   insertBudgetSchema,
+  insertBudgetItemSchema,
   insertWalletInvitationSchema,
   insertGoalSchema,
   insertUserPreferencesSchema,
@@ -899,6 +903,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting budget:", error);
       res.status(500).json({ message: "Failed to delete budget" });
+    }
+  });
+
+  // Budget item routes
+  app.get('/api/budgets/:budgetId/items', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const budgetId = req.params.budgetId;
+      
+      const budget = await storage.getBudget(budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(budget.walletId, userId);
+      if (!member) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const items = await storage.getBudgetItems(budgetId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching budget items:", error);
+      res.status(500).json({ message: "Failed to fetch budget items" });
+    }
+  });
+
+  app.post('/api/budgets/:budgetId/items', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const budgetId = req.params.budgetId;
+      
+      const budget = await storage.getBudget(budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(budget.walletId, userId);
+      if (!member || !['owner', 'manager', 'contributor'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const itemData = insertBudgetItemSchema.parse({
+        ...req.body,
+        budgetId,
+      });
+
+      const item = await storage.createBudgetItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating budget item:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create budget item" });
+      }
+    }
+  });
+
+  app.put('/api/budget-items/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const itemId = req.params.id;
+      
+      const items = await storage.getBudgetItems('dummy'); // We need to get the item first to find the budget
+      const item = await db.select().from(budgetItems).where(eq(budgetItems.id, itemId)).limit(1);
+      if (!item.length) {
+        return res.status(404).json({ message: "Budget item not found" });
+      }
+
+      const budget = await storage.getBudget(item[0].budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(budget.walletId, userId);
+      if (!member || !['owner', 'manager', 'contributor'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const updates = req.body;
+      const updatedItem = await storage.updateBudgetItem(itemId, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating budget item:", error);
+      res.status(500).json({ message: "Failed to update budget item" });
+    }
+  });
+
+  app.put('/api/budget-items/:id/purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const itemId = req.params.id;
+      const { actualQuantity, actualUnitPrice, actualAmount, notes } = req.body;
+      
+      const item = await db.select().from(budgetItems).where(eq(budgetItems.id, itemId)).limit(1);
+      if (!item.length) {
+        return res.status(404).json({ message: "Budget item not found" });
+      }
+
+      const budget = await storage.getBudget(item[0].budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(budget.walletId, userId);
+      if (!member || !['owner', 'manager', 'contributor'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const updatedItem = await storage.updateBudgetItemPurchase(
+        itemId, 
+        parseFloat(actualQuantity), 
+        parseFloat(actualUnitPrice), 
+        parseFloat(actualAmount), 
+        notes
+      );
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating purchase:", error);
+      res.status(500).json({ message: "Failed to update purchase" });
+    }
+  });
+
+  app.delete('/api/budget-items/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const itemId = req.params.id;
+      
+      const item = await db.select().from(budgetItems).where(eq(budgetItems.id, itemId)).limit(1);
+      if (!item.length) {
+        return res.status(404).json({ message: "Budget item not found" });
+      }
+
+      const budget = await storage.getBudget(item[0].budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+
+      // Check permissions
+      const member = await storage.getWalletMember(budget.walletId, userId);
+      if (!member || !['owner', 'manager'].includes(member.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      await storage.deleteBudgetItem(itemId);
+      res.json({ message: "Budget item deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting budget item:", error);
+      res.status(500).json({ message: "Failed to delete budget item" });
     }
   });
 

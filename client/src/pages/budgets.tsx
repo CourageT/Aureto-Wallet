@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import Sidebar from "@/components/layout/sidebar";
-import TopBar from "@/components/layout/topbar";
 import MobileNavigation from "@/components/layout/mobile-navigation";
+import Sidebar from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Wallet, TrendingUp, TrendingDown, DollarSign, Target, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import BudgetItemManager from "@/components/budget-item-manager";
+import PurchaseForm from "@/components/purchase-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,89 +25,90 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 const budgetSchema = z.object({
   walletId: z.string().min(1, "Please select a wallet"),
   categoryId: z.string().min(1, "Please select a category"),
+  name: z.string().min(1, "Budget name is required"),
+  description: z.string().optional(),
   amount: z.string().min(1, "Amount is required"),
-  period: z.enum(["monthly", "weekly", "yearly"]),
+  period: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly", "custom"]),
+  budgetType: z.enum(["category", "detailed", "mixed"]),
   alertThreshold: z.string().optional(),
 });
 
+const budgetItemSchema = z.object({
+  name: z.string().min(1, "Item name is required"),
+  description: z.string().optional(),
+  unit: z.string().optional(),
+  plannedQuantity: z.string().optional(),
+  plannedUnitPrice: z.string().optional(),
+  plannedAmount: z.string().min(1, "Planned amount is required"),
+});
+
 type BudgetFormData = z.infer<typeof budgetSchema>;
+type BudgetItemFormData = z.infer<typeof budgetItemSchema>;
 
 export default function Budgets() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
-  const [showTemplatesDialog, setShowTemplatesDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [selectedBudget, setSelectedBudget] = useState<any>(null);
+  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [currentBudgetType, setCurrentBudgetType] = useState<string>("category");
   const queryClient = useQueryClient();
-
-  // Budget templates for quick setup
-  const budgetTemplates = [
-    { id: "essential", name: "Essential Expenses", description: "Basic monthly needs", categories: ["🏠 Housing", "🍕 Food & Dining", "🚗 Transportation"], amounts: [1200, 400, 300] },
-    { id: "balanced", name: "Balanced Budget", description: "Well-rounded financial plan", categories: ["🏠 Housing", "🍕 Food & Dining", "🎯 Entertainment", "💰 Savings"], amounts: [1000, 350, 200, 500] },
-    { id: "student", name: "Student Budget", description: "Budget for students", categories: ["📚 Education", "🍕 Food & Dining", "🚗 Transportation"], amounts: [800, 250, 150] },
-    { id: "family", name: "Family Budget", description: "Complete family expenses", categories: ["🏠 Housing", "🍕 Food & Dining", "👶 Childcare", "🎯 Entertainment"], amounts: [1500, 600, 400, 200] }
-  ];
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
       period: "monthly",
+      budgetType: "category",
       alertThreshold: "80",
+      name: "",
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  const itemForm = useForm<BudgetItemFormData>({
+    resolver: zodResolver(budgetItemSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      unit: "items",
+      plannedQuantity: "1",
+      plannedUnitPrice: "0",
+      plannedAmount: "0",
+    },
+  });
 
   // Fetch data
-  const { data: wallets, isLoading: walletsLoading } = useQuery({
-    queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
-  });
-
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
-  });
-
-  const { data: budgets, isLoading: budgetsLoading, refetch: refetchBudgets } = useQuery({
+  const { data: budgets = [], isLoading: budgetsLoading } = useQuery({
     queryKey: ["/api/budgets"],
     enabled: isAuthenticated,
   });
 
-  // Create budget mutation
+  const { data: wallets = [] } = useQuery({
+    queryKey: ["/api/wallets"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    enabled: isAuthenticated,
+  });
+
+  // Mutations
   const createBudgetMutation = useMutation({
-    mutationFn: async (data: BudgetFormData) => {
-      const budgetData = {
-        ...data,
-        amount: parseFloat(data.amount),
-        alertThreshold: data.alertThreshold ? parseFloat(data.alertThreshold) : 80,
-        startDate: startOfMonth(new Date()),
-        endDate: endOfMonth(new Date()),
-      };
+    mutationFn: async (budgetData: any) => {
       return await apiRequest("/api/budgets", "POST", budgetData);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      setIsCreateOpen(false);
+      setEditingBudget(null);
+      form.reset();
       toast({
         title: "Success",
-        description: "Budget created successfully!",
+        description: "Budget created successfully",
       });
-      form.reset();
-      setIsCreateOpen(false);
-      refetchBudgets();
-      queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
     },
     onError: (error: any) => {
       toast({
@@ -116,74 +119,122 @@ export default function Budgets() {
     },
   });
 
-  // Update budget mutation
   const updateBudgetMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: BudgetFormData }) => {
-      const budgetData = {
-        ...data,
-        amount: parseFloat(data.amount),
-        alertThreshold: data.alertThreshold ? parseFloat(data.alertThreshold) : 80,
-      };
+    mutationFn: async ({ id, budgetData }: { id: string; budgetData: any }) => {
       return await apiRequest(`/api/budgets/${id}`, "PUT", budgetData);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      setIsCreateOpen(false);
+      setEditingBudget(null);
+      form.reset();
       toast({
         title: "Success",
-        description: "Budget updated successfully!",
-      });
-      setEditingBudget(null);
-      setIsCreateOpen(false);
-      form.reset();
-      refetchBudgets();
-      queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update budget",
-        variant: "destructive",
+        description: "Budget updated successfully",
       });
     },
   });
 
-  // Delete budget mutation
   const deleteBudgetMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest(`/api/budgets/${id}`, "DELETE");
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       toast({
         title: "Success",
-        description: "Budget deleted successfully!",
+        description: "Budget deleted successfully",
       });
-      refetchBudgets();
-      queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
     },
-    onError: (error: any) => {
+  });
+
+  const createItemMutation = useMutation({
+    mutationFn: async ({ budgetId, data }: { budgetId: string; data: any }) => {
+      return await apiRequest(`/api/budgets/${budgetId}/items`, "POST", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsItemDialogOpen(false);
+      setEditingItem(null);
+      itemForm.reset();
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete budget",
-        variant: "destructive",
+        title: "Success", 
+        description: "Budget item created successfully",
+      });
+    },
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest(`/api/budget-items/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsItemDialogOpen(false);
+      setEditingItem(null);
+      itemForm.reset();
+      toast({
+        title: "Success",
+        description: "Budget item updated successfully",
+      });
+    },
+  });
+
+  const updatePurchaseMutation = useMutation({
+    mutationFn: async ({ itemId, purchase }: { itemId: string; purchase: any }) => {
+      return await apiRequest(`/api/budget-items/${itemId}/purchase`, "PUT", purchase);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      setIsPurchaseDialogOpen(false);
+      setEditingItem(null);
+      toast({
+        title: "Success",
+        description: "Purchase recorded successfully",
       });
     },
   });
 
   const onSubmit = (data: BudgetFormData) => {
+    const budgetData = {
+      ...data,
+      amount: parseFloat(data.amount),
+      alertThreshold: data.alertThreshold ? parseInt(data.alertThreshold) : 80,
+    };
+
     if (editingBudget) {
-      updateBudgetMutation.mutate({ id: editingBudget.id, data });
+      updateBudgetMutation.mutate({ id: editingBudget.id, budgetData });
     } else {
-      createBudgetMutation.mutate(data);
+      createBudgetMutation.mutate(budgetData);
     }
-    setIsCreateOpen(false);
+  };
+
+  const onItemSubmit = (data: BudgetItemFormData) => {
+    const itemData = {
+      ...data,
+      plannedQuantity: data.plannedQuantity ? parseFloat(data.plannedQuantity) : 1,
+      plannedUnitPrice: data.plannedUnitPrice ? parseFloat(data.plannedUnitPrice) : 0,
+      plannedAmount: parseFloat(data.plannedAmount),
+    };
+
+    if (editingItem) {
+      updateItemMutation.mutate({ id: editingItem.id, data: itemData });
+    } else if (selectedBudget) {
+      createItemMutation.mutate({ budgetId: selectedBudget.id, data: itemData });
+    }
   };
 
   const handleEdit = (budget: any) => {
     setEditingBudget(budget);
     form.setValue("walletId", budget.walletId);
     form.setValue("categoryId", budget.categoryId);
+    form.setValue("name", budget.name || "");
+    form.setValue("description", budget.description || "");
     form.setValue("amount", parseFloat(budget.amount || 0).toString());
     form.setValue("period", budget.period);
+    form.setValue("budgetType", budget.budgetType || "category");
     form.setValue("alertThreshold", budget.alertThreshold?.toString() || "80");
+    setCurrentBudgetType(budget.budgetType || "category");
     setIsCreateOpen(true);
   };
 
@@ -228,9 +279,7 @@ export default function Budgets() {
         </div>
         
         <main className="flex-1 overflow-auto">
-          <div className="hidden md:block">
-            <TopBar title="Budget Management" subtitle="Track and manage your spending budgets" />
-          </div>
+
           
           <div className="p-4 md:p-6 space-y-4 md:space-y-6 pt-20 md:pt-4 pb-24 md:pb-6">
             {/* Header with Create Button */}
@@ -265,11 +314,11 @@ export default function Budgets() {
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select wallet" />
+                                  <SelectValue placeholder="Select a wallet" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Array.isArray(wallets) && wallets.map((wallet: any) => (
+                                {wallets.map((wallet: any) => (
                                   <SelectItem key={wallet.id} value={wallet.id}>
                                     {wallet.name}
                                   </SelectItem>
@@ -290,15 +339,84 @@ export default function Budgets() {
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select category" />
+                                  <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Array.isArray(categories) && categories.map((category: any) => (
+                                {categories.map((category: any) => (
                                   <SelectItem key={category.id} value={category.id}>
-                                    {category.icon} {category.name}
+                                    <div className="flex items-center gap-2">
+                                      <span>{category.icon}</span>
+                                      <span>{category.name}</span>
+                                    </div>
                                   </SelectItem>
                                 ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Budget Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Monthly Groceries" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="period"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Time Period</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select period" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="daily">Daily</SelectItem>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                                <SelectItem value="yearly">Yearly</SelectItem>
+                                <SelectItem value="custom">Custom</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="budgetType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Budget Type</FormLabel>
+                            <Select onValueChange={(value) => {
+                              field.onChange(value);
+                              setCurrentBudgetType(value);
+                            }} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select budget type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="category">Category Budget</SelectItem>
+                                <SelectItem value="detailed">Detailed Item Budget</SelectItem>
+                                <SelectItem value="mixed">Mixed Budget</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -313,12 +431,7 @@ export default function Budgets() {
                           <FormItem>
                             <FormLabel>Budget Amount</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01" 
-                                placeholder="Enter amount" 
-                                {...field} 
-                              />
+                              <Input type="number" step="0.01" placeholder="500.00" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -327,22 +440,13 @@ export default function Budgets() {
 
                       <FormField
                         control={form.control}
-                        name="period"
+                        name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Period</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="yearly">Yearly</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Budget description..." {...field} />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -355,13 +459,7 @@ export default function Budgets() {
                           <FormItem>
                             <FormLabel>Alert Threshold (%)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                min="1" 
-                                max="100" 
-                                placeholder="80" 
-                                {...field} 
-                              />
+                              <Input type="number" min="1" max="100" placeholder="80" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -382,9 +480,11 @@ export default function Budgets() {
                           disabled={createBudgetMutation.isPending || updateBudgetMutation.isPending}
                           className="flex-1"
                         >
-                          {createBudgetMutation.isPending || updateBudgetMutation.isPending ? 
-                            "Saving..." : editingBudget ? "Update" : "Create"
-                          }
+                          {createBudgetMutation.isPending || updateBudgetMutation.isPending
+                            ? "Saving..."
+                            : editingBudget
+                            ? "Update Budget"
+                            : "Create Budget"}
                         </Button>
                       </div>
                     </form>
@@ -422,59 +522,38 @@ export default function Budgets() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{budget.category?.icon}</span>
-                            <CardTitle className="text-lg">{budget.category?.name}</CardTitle>
+                            <div>
+                              <CardTitle className="text-lg">{budget.name || budget.category?.name}</CardTitle>
+                              {budget.budgetType !== "category" && (
+                                <div className="text-xs text-gray-500 capitalize">{budget.budgetType} Budget</div>
+                              )}
+                            </div>
                           </div>
                           <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(budget)}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(budget)}>
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(budget.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(budget.id)}>
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Wallet className="w-4 h-4" />
-                          {budget.wallet?.name}
-                          <Badge variant={status === "over" ? "destructive" : status === "warning" ? "secondary" : "default"}>
-                            {budget.period}
-                          </Badge>
-                        </div>
+                        <div className="text-sm text-gray-500 capitalize">{budget.period}</div>
                       </CardHeader>
-                      
                       <CardContent>
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
-                            <span className="text-2xl font-bold">
-                              ${budget.spent?.toFixed(2) || "0.00"}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              of ${parseFloat(budget.amount || 0).toFixed(2)}
-                            </span>
+                            <span className="text-2xl font-bold">${budget.spent?.toFixed(2) || "0.00"}</span>
+                            <span className="text-gray-500">of ${amount.toFixed(2)}</span>
                           </div>
                           
-                          <div className="space-y-2">
-                            <Progress 
-                              value={percentage} 
-                              className={`h-3 ${
-                                color === "red" ? "bg-red-100" : 
-                                color === "yellow" ? "bg-yellow-100" : 
-                                "bg-green-100"
-                              }`}
-                            />
-                            <div className="flex justify-between text-sm">
-                              <span className={`font-medium ${
-                                color === "red" ? "text-red-600" : 
-                                color === "yellow" ? "text-yellow-600" : 
-                                "text-green-600"
+                          <Progress value={percentage} className="h-2" />
+                          
+                          <div className="flex justify-between items-center text-sm">
+                            <div className="flex gap-4">
+                              <span className={`${
+                                status === "over" ? "text-red-600" :
+                                status === "warning" ? "text-yellow-600" : "text-green-600"
                               }`}>
                                 {percentage.toFixed(1)}% used
                               </span>
@@ -496,6 +575,17 @@ export default function Budgets() {
                               <AlertTriangle className="w-4 h-4" />
                               Near budget limit
                             </div>
+                          )}
+
+                          {(budget.budgetType === "detailed" || budget.budgetType === "mixed") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => setSelectedBudget(budget)}
+                            >
+                              Manage Items
+                            </Button>
                           )}
                         </div>
                       </CardContent>
@@ -522,62 +612,187 @@ export default function Budgets() {
         </main>
       </div>
 
-      {/* Budget Templates Dialog */}
-      <Dialog open={showTemplatesDialog} onOpenChange={setShowTemplatesDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Choose Budget Template</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {budgetTemplates.map((template) => (
-              <Card key={template.id} className={`cursor-pointer transition-all ${selectedTemplate === template.id ? 'ring-2 ring-primary-500 bg-primary-50' : 'hover:shadow-md'}`} onClick={() => setSelectedTemplate(template.id)}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{template.name}</CardTitle>
-                  <p className="text-sm text-gray-500">{template.description}</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {template.categories.map((category, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <span>{category}</span>
-                        <span className="font-medium">${template.amounts[index]}</span>
-                      </div>
-                    ))}
-                    <div className="border-t pt-2 mt-2">
-                      <div className="flex justify-between items-center font-medium">
-                        <span>Total</span>
-                        <span>${template.amounts.reduce((sum, amount) => sum + amount, 0)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setShowTemplatesDialog(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => {
-                if (selectedTemplate) {
-                  const template = budgetTemplates.find(t => t.id === selectedTemplate);
-                  if (template) {
-                    // Apply template logic here
-                    toast({
-                      title: "Template Applied",
-                      description: `${template.name} template will be applied to your budgets.`,
-                    });
-                    setShowTemplatesDialog(false);
-                    setSelectedTemplate("");
-                  }
-                }
+      {/* Budget Item Management Dialog */}
+      {selectedBudget && (
+        <Dialog open={!!selectedBudget} onOpenChange={() => setSelectedBudget(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                Manage Items - {selectedBudget.name}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <BudgetItemManager
+              budget={selectedBudget}
+              onAddItem={() => {
+                setEditingItem(null);
+                itemForm.reset();
+                setIsItemDialogOpen(true);
               }}
-              disabled={!selectedTemplate}
-            >
-              Apply Template
-            </Button>
-          </div>
+              onEditItem={(item) => {
+                setEditingItem(item);
+                itemForm.setValue("name", item.name || "");
+                itemForm.setValue("description", item.description || "");
+                itemForm.setValue("unit", item.unit || "items");
+                itemForm.setValue("plannedQuantity", item.plannedQuantity?.toString() || "1");
+                itemForm.setValue("plannedUnitPrice", item.plannedUnitPrice?.toString() || "");
+                itemForm.setValue("plannedAmount", item.plannedAmount?.toString() || "");
+                setIsItemDialogOpen(true);
+              }}
+              onRecordPurchase={(item) => {
+                setEditingItem(item);
+                setIsPurchaseDialogOpen(true);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Item Creation/Edit Dialog */}
+      <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "Edit Item" : "Add Budget Item"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Form {...itemForm}>
+            <form onSubmit={itemForm.handleSubmit(onItemSubmit)} className="space-y-4">
+              <FormField
+                control={itemForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Item Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Milk" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={itemForm.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., gallons, items, kg" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={itemForm.control}
+                  name="plannedQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Planned Quantity</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="2" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={itemForm.control}
+                  name="plannedUnitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit Price</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="3.99" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={itemForm.control}
+                name="plannedAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Planned Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="7.98" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={itemForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsItemDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createItemMutation.isPending || updateItemMutation.isPending}
+                  className="flex-1"
+                >
+                  {createItemMutation.isPending || updateItemMutation.isPending
+                    ? "Saving..."
+                    : editingItem
+                    ? "Update Item"
+                    : "Add Item"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Purchase Recording Dialog */}
+      <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Record Purchase - {editingItem?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <PurchaseForm 
+            item={editingItem}
+            onSubmit={(purchase) => {
+              if (editingItem) {
+                updatePurchaseMutation.mutate({ itemId: editingItem.id, purchase });
+              }
+            }}
+            onCancel={() => {
+              setIsPurchaseDialogOpen(false);
+              setEditingItem(null);
+            }}
+            isLoading={updatePurchaseMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
     </>
