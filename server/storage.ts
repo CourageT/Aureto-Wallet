@@ -44,7 +44,7 @@ import {
   type GoalWithDetails,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, inArray, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -652,22 +652,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBudgetSpent(budgetId: string): Promise<number> {
-    const [budget] = await db.select().from(budgets).where(eq(budgets.id, budgetId));
-    
-    if (!budget) return 0;
-
+    // Calculate spent amount from budget items with recorded purchases
     const results = await db
       .select({
-        total: sql<number>`COALESCE(SUM(CAST(${transactions.amount} AS DECIMAL)), 0)`,
+        total: sql<number>`COALESCE(SUM(CAST(${budgetItems.actualAmount} AS DECIMAL)), 0)`,
       })
-      .from(transactions)
+      .from(budgetItems)
       .where(
         and(
-          eq(transactions.walletId, budget.walletId),
-          eq(transactions.categoryId, budget.categoryId),
-          eq(transactions.type, 'expense'),
-          gte(transactions.date, budget.startDate),
-          budget.endDate ? lte(transactions.date, budget.endDate) : sql`TRUE`
+          eq(budgetItems.budgetId, budgetId),
+          eq(budgetItems.isPurchased, true),
+          isNotNull(budgetItems.actualAmount)
         )
       );
 
@@ -865,29 +860,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Enhanced budget operations
-  async getBudgetSpent(budgetId: string): Promise<number> {
-    const budget = await db.select().from(budgets).where(eq(budgets.id, budgetId));
-    if (!budget.length) return 0;
-
-    const currentBudget = budget[0];
-    const startDate = new Date(currentBudget.startDate);
-    const endDate = currentBudget.endDate ? new Date(currentBudget.endDate) : new Date();
-
-    const spent = await db
-      .select({ total: sql`COALESCE(SUM(CAST(${transactions.amount} AS DECIMAL)), 0)` })
-      .from(transactions)
-      .where(
-        and(
-          eq(transactions.walletId, currentBudget.walletId),
-          eq(transactions.categoryId, currentBudget.categoryId),
-          eq(transactions.type, 'expense'),
-          gte(transactions.date, startDate),
-          lte(transactions.date, endDate)
-        )
-      );
-
-    return parseFloat(spent[0]?.total?.toString() || '0');
-  }
 
   // AI & Analytics operations
   async getFinancialSummary(userId: string, options = {}): Promise<any> {
