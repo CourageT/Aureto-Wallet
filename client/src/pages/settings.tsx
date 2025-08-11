@@ -267,31 +267,40 @@ export default function Settings() {
 
               {/* Profile Reset Section */}
               <div className="mt-6 pt-6 border-t border-red-200">
-                <div className="bg-red-50 p-4 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <i className="fas fa-exclamation-triangle text-red-400 text-lg"></i>
+                <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <i className="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-semibold text-red-800 mb-2">
+                          Danger Zone
+                        </h3>
+                        <div className="text-sm text-red-700 mb-4">
+                          <p className="mb-2">
+                            Reset your entire profile to day one. This will permanently delete all your data including:
+                          </p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>All wallets and transactions</li>
+                            <li>All budgets and spending tracking</li>
+                            <li>All financial goals</li>
+                            <li>All categories and preferences</li>
+                          </ul>
+                          <p className="mt-2 font-medium">This action cannot be undone.</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-3 flex-1">
-                      <h3 className="text-sm font-medium text-red-800">
-                        Danger Zone
-                      </h3>
-                      <div className="mt-2 text-sm text-red-700">
-                        <p>
-                          Reset your entire profile to day one. This will permanently delete all your data including:
-                          wallets, transactions, budgets, goals, and preferences. This action cannot be undone.
-                        </p>
-                      </div>
-                      <div className="mt-4">
-                        <Button
-                          onClick={() => setShowResetDialog(true)}
-                          variant="destructive"
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          <i className="fas fa-trash text-sm mr-2"></i>
-                          Reset Profile
-                        </Button>
-                      </div>
+                    <div>
+                      <Button
+                        onClick={() => setShowResetDialog(true)}
+                        variant="destructive"
+                        size="lg"
+                        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 shadow-lg"
+                      >
+                        <i className="fas fa-trash mr-2"></i>
+                        Reset Profile
+                      </Button>
                     </div>
                   </div>
                 </div>
