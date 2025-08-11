@@ -122,6 +122,9 @@ export interface IStorage {
     totalAmount: number;
     transactionCount: number;
   }[]>;
+
+  // Profile reset operations
+  resetUserProfile(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -993,6 +996,63 @@ export class DatabaseStorage implements IStorage {
     }
     
     return recommendations;
+  }
+
+  // Profile reset operations
+  async resetUserProfile(userId: string): Promise<void> {
+    // Delete all user data in the correct order to handle foreign key constraints
+    
+    // 1. Delete budget items first (they reference budgets)
+    const userBudgets = await this.getUserBudgets(userId);
+    for (const budget of userBudgets) {
+      await db.delete(budgetItems).where(eq(budgetItems.budgetId, budget.id));
+    }
+    
+    // 2. Delete budgets (they reference wallets and categories)
+    for (const budget of userBudgets) {
+      await db.delete(budgets).where(eq(budgets.id, budget.id));
+    }
+    
+    // 3. Delete transactions (they reference wallets)
+    const userWallets = await this.getUserWallets(userId);
+    for (const wallet of userWallets) {
+      await db.delete(transactions).where(eq(transactions.walletId, wallet.id));
+    }
+    
+    // 4. Delete wallet invitations
+    for (const wallet of userWallets) {
+      await db.delete(walletInvitations).where(eq(walletInvitations.walletId, wallet.id));
+    }
+    
+    // 5. Delete wallet members (including user's own memberships)
+    for (const wallet of userWallets) {
+      await db.delete(walletMembers).where(eq(walletMembers.walletId, wallet.id));
+    }
+    
+    // 6. Delete wallets
+    for (const wallet of userWallets) {
+      await db.delete(wallets).where(eq(wallets.id, wallet.id));
+    }
+    
+    // 7. Delete goals
+    await db.delete(goals).where(eq(goals.userId, userId));
+    
+    // 8. Delete notifications
+    await db.delete(notifications).where(eq(notifications.userId, userId));
+    
+    // 9. Delete alerts
+    await db.delete(alerts).where(eq(alerts.userId, userId));
+    
+    // 10. Delete reports
+    await db.delete(reports).where(eq(reports.userId, userId));
+    
+    // 11. Delete user preferences
+    await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
+    
+    // 12. Delete custom categories created by user
+    await db.delete(categories).where(eq(categories.userId, userId));
+    
+    // Note: We don't delete the user record itself as it's managed by authentication
   }
 }
 

@@ -573,6 +573,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile reset route
+  app.post('/api/users/me/reset', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { confirmationText } = req.body;
+      
+      // Verify confirmation text
+      if (confirmationText !== 'delete-all-data-by-courage') {
+        return res.status(400).json({ 
+          message: "Invalid confirmation text. Please type exactly: delete-all-data-by-courage" 
+        });
+      }
+      
+      // Perform the profile reset
+      await storage.resetUserProfile(userId);
+      
+      res.json({ 
+        message: "Profile reset successfully. All data has been deleted.",
+        resetAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error resetting user profile:", error);
+      res.status(500).json({ message: "Failed to reset profile. Please try again." });
+    }
+  });
+
   // Financial Goals Routes
   app.get('/api/goals', isAuthenticated, async (req: any, res) => {
     try {

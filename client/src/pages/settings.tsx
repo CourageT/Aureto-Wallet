@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useForm } from "react-hook-form";
@@ -31,6 +32,8 @@ export default function Settings() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetConfirmationText, setResetConfirmationText] = useState('');
   const queryClient = useQueryClient();
 
   const form = useForm<CategoryFormData>({
@@ -128,6 +131,52 @@ export default function Settings() {
     },
   });
 
+  const resetProfileMutation = useMutation({
+    mutationFn: async (confirmationText: string) => {
+      const response = await apiRequest('POST', '/api/users/me/reset', {
+        confirmationText,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Reset Complete",
+        description: "Your profile has been reset successfully. Refreshing page...",
+      });
+      // Clear all cached queries and refresh the page
+      queryClient.clear();
+      setShowResetDialog(false);
+      setResetConfirmationText('');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Reset Failed",
+        description: error.message || "Failed to reset profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleResetProfile = () => {
+    if (resetConfirmationText === 'delete-all-data-by-courage') {
+      resetProfileMutation.mutate(resetConfirmationText);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -213,6 +262,38 @@ export default function Settings() {
                     <i className="fas fa-sign-out-alt text-sm mr-2"></i>
                     Sign Out
                   </Button>
+                </div>
+              </div>
+
+              {/* Profile Reset Section */}
+              <div className="mt-6 pt-6 border-t border-red-200">
+                <div className="bg-red-50 p-4 rounded-md">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <i className="fas fa-exclamation-triangle text-red-400 text-lg"></i>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-medium text-red-800">
+                        Danger Zone
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <p>
+                          Reset your entire profile to day one. This will permanently delete all your data including:
+                          wallets, transactions, budgets, goals, and preferences. This action cannot be undone.
+                        </p>
+                      </div>
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => setShowResetDialog(true)}
+                          variant="destructive"
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          <i className="fas fa-trash text-sm mr-2"></i>
+                          Reset Profile
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -470,7 +551,7 @@ export default function Settings() {
           {/* Application Information */}
           <Card>
             <CardHeader>
-              <CardTitle>About SpendWise Pro</CardTitle>
+              <CardTitle>About SendWise</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -479,7 +560,7 @@ export default function Settings() {
                     <i className="fas fa-wallet text-white text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">SpendWise Pro</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">SendWise</h3>
                     <p className="text-sm text-gray-500">Collaborative Financial Management Platform</p>
                   </div>
                 </div>
@@ -504,6 +585,89 @@ export default function Settings() {
           </div>
         </main>
       </div>
+
+      {/* Profile Reset Confirmation Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Reset Profile</DialogTitle>
+            <DialogDescription className="text-gray-600">
+              This action will permanently delete all your data including wallets, transactions, 
+              budgets, goals, and preferences. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-red-50 p-4 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <i className="fas fa-exclamation-triangle text-red-400"></i>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Warning: This will delete everything
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>All wallets and transactions</li>
+                      <li>All budgets and spending tracking</li>
+                      <li>All financial goals</li>
+                      <li>All categories and preferences</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="confirmation" className="text-sm font-medium">
+                To confirm, type: <code className="bg-gray-100 px-2 py-1 rounded text-red-600">delete-all-data-by-courage</code>
+              </Label>
+              <Input
+                id="confirmation"
+                value={resetConfirmationText}
+                onChange={(e) => setResetConfirmationText(e.target.value)}
+                placeholder="Type the confirmation text exactly..."
+                className="mt-2"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowResetDialog(false);
+                setResetConfirmationText('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetProfile}
+              disabled={
+                resetConfirmationText !== 'delete-all-data-by-courage' || 
+                resetProfileMutation.isPending
+              }
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {resetProfileMutation.isPending ? (
+                <>
+                  <i className="fas fa-spinner animate-spin mr-2"></i>
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-trash mr-2"></i>
+                  Reset Profile
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
