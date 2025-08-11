@@ -295,6 +295,17 @@ export default function Budgets() {
     }
   };
 
+  // Auto-calculate planned amount when quantity or unit price changes
+  const calculatePlannedAmount = () => {
+    const quantity = parseFloat(itemForm.getValues("plannedQuantity") || "0");
+    const unitPrice = parseFloat(itemForm.getValues("plannedUnitPrice") || "0");
+    const total = quantity * unitPrice;
+    
+    if (total > 0) {
+      itemForm.setValue("plannedAmount", total.toFixed(2));
+    }
+  };
+
   const onItemSubmit = (data: BudgetItemFormData) => {
     const itemData = {
       ...data,
@@ -797,7 +808,17 @@ export default function Budgets() {
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.001" placeholder="1" {...field} className="min-h-[44px]" />
+                        <Input 
+                          type="number" 
+                          step="0.001" 
+                          placeholder="1" 
+                          {...field} 
+                          className="min-h-[44px]"
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setTimeout(calculatePlannedAmount, 100);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -840,7 +861,17 @@ export default function Budgets() {
                   <FormItem>
                     <FormLabel>Unit Price (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} className="min-h-[44px]" />
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field} 
+                        className="min-h-[44px]"
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setTimeout(calculatePlannedAmount, 100);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
