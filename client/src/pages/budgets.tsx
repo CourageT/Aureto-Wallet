@@ -7,20 +7,19 @@ import MobileNavigation from "@/components/layout/mobile-navigation";
 import Sidebar from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Wallet, TrendingUp, TrendingDown, DollarSign, Target, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, PiggyBank, Package } from "lucide-react";
 import BudgetItemManager from "@/components/budget-item-manager";
 import PurchaseForm from "@/components/purchase-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, startOfMonth, endOfMonth } from "date-fns";
 
 const budgetSchema = z.object({
   walletId: z.string().min(1, "Please select a wallet"),
@@ -33,49 +32,31 @@ const budgetSchema = z.object({
   alertThreshold: z.string().optional(),
 });
 
-const budgetItemSchema = z.object({
-  name: z.string().min(1, "Item name is required"),
-  description: z.string().optional(),
-  unit: z.string().optional(),
-  plannedQuantity: z.string().optional(),
-  plannedUnitPrice: z.string().optional(),
-  plannedAmount: z.string().min(1, "Planned amount is required"),
-});
-
 type BudgetFormData = z.infer<typeof budgetSchema>;
-type BudgetItemFormData = z.infer<typeof budgetItemSchema>;
 
 export default function Budgets() {
-  const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
   const [selectedBudget, setSelectedBudget] = useState<any>(null);
-  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [currentBudgetType, setCurrentBudgetType] = useState<string>("category");
-  const queryClient = useQueryClient();
 
+  // Form
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
+      walletId: "",
+      categoryId: "",
+      name: "",
+      description: "",
+      amount: "",
       period: "monthly",
       budgetType: "category",
       alertThreshold: "80",
-      name: "",
-    },
-  });
-
-  const itemForm = useForm<BudgetItemFormData>({
-    resolver: zodResolver(budgetItemSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      unit: "items",
-      plannedQuantity: "1",
-      plannedUnitPrice: "0",
-      plannedAmount: "0",
     },
   });
 
@@ -101,14 +82,13 @@ export default function Budgets() {
       return await apiRequest("/api/budgets", "POST", budgetData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
-      setIsCreateOpen(false);
-      setEditingBudget(null);
-      form.reset();
       toast({
         title: "Success",
-        description: "Budget created successfully",
+        description: "Budget created successfully!",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      setIsCreateOpen(false);
+      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -124,77 +104,45 @@ export default function Budgets() {
       return await apiRequest(`/api/budgets/${id}`, "PUT", budgetData);
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Budget updated successfully!",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       setIsCreateOpen(false);
       setEditingBudget(null);
       form.reset();
+    },
+    onError: (error: any) => {
       toast({
-        title: "Success",
-        description: "Budget updated successfully",
+        title: "Error",
+        description: error.message || "Failed to update budget",
+        variant: "destructive",
       });
     },
   });
 
   const deleteBudgetMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest(`/api/budgets/${id}`, "DELETE");
+    mutationFn: async (budgetId: string) => {
+      return await apiRequest(`/api/budgets/${budgetId}`, "DELETE");
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Budget deleted successfully!",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+    },
+    onError: (error: any) => {
       toast({
-        title: "Success",
-        description: "Budget deleted successfully",
+        title: "Error",
+        description: error.message || "Failed to delete budget",
+        variant: "destructive",
       });
     },
   });
 
-  const createItemMutation = useMutation({
-    mutationFn: async ({ budgetId, data }: { budgetId: string; data: any }) => {
-      return await apiRequest(`/api/budgets/${budgetId}/items`, "POST", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
-      setIsItemDialogOpen(false);
-      setEditingItem(null);
-      itemForm.reset();
-      toast({
-        title: "Success", 
-        description: "Budget item created successfully",
-      });
-    },
-  });
-
-  const updateItemMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest(`/api/budget-items/${id}`, "PUT", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
-      setIsItemDialogOpen(false);
-      setEditingItem(null);
-      itemForm.reset();
-      toast({
-        title: "Success",
-        description: "Budget item updated successfully",
-      });
-    },
-  });
-
-  const updatePurchaseMutation = useMutation({
-    mutationFn: async ({ itemId, purchase }: { itemId: string; purchase: any }) => {
-      return await apiRequest(`/api/budget-items/${itemId}/purchase`, "PUT", purchase);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
-      setIsPurchaseDialogOpen(false);
-      setEditingItem(null);
-      toast({
-        title: "Success",
-        description: "Purchase recorded successfully",
-      });
-    },
-  });
-
+  // Helper functions
   const calculatePeriodDates = (period: string) => {
     const now = new Date();
     let startDate: Date;
@@ -252,21 +200,6 @@ export default function Budgets() {
     }
   };
 
-  const onItemSubmit = (data: BudgetItemFormData) => {
-    const itemData = {
-      ...data,
-      plannedQuantity: data.plannedQuantity ? parseFloat(data.plannedQuantity) : 1,
-      plannedUnitPrice: data.plannedUnitPrice ? parseFloat(data.plannedUnitPrice) : 0,
-      plannedAmount: parseFloat(data.plannedAmount),
-    };
-
-    if (editingItem) {
-      updateItemMutation.mutate({ id: editingItem.id, data: itemData });
-    } else if (selectedBudget) {
-      createItemMutation.mutate({ budgetId: selectedBudget.id, data: itemData });
-    }
-  };
-
   const handleEdit = (budget: any) => {
     setEditingBudget(budget);
     form.setValue("walletId", budget.walletId);
@@ -321,395 +254,219 @@ export default function Budgets() {
           <Sidebar />
         </div>
         
-        <main className="flex-1 overflow-auto">
-
-          
-          <div className="p-4 md:p-6 space-y-4 md:space-y-6 pt-20 md:pt-4 pb-24 md:pb-6">
-            {/* Header with Create Button */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 md:hidden">Budget Management</h1>
-                <p className="text-gray-500 md:hidden">Track and manage your spending budgets</p>
+        <main className="flex-1 overflow-auto pt-16 md:pt-0 pb-20 md:pb-0">
+          <div className="p-4 md:p-6 max-w-7xl mx-auto">
+            {/* Mobile-friendly header */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">Budget Management</h1>
+                <p className="text-sm md:text-base text-gray-600 mt-1">Track and manage your spending budgets</p>
               </div>
-              
-              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => { setEditingBudget(null); form.reset(); }}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Budget
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingBudget ? "Edit Budget" : "Create New Budget"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="walletId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Wallet</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a wallet" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {wallets.map((wallet: any) => (
-                                  <SelectItem key={wallet.id} value={wallet.id}>
-                                    {wallet.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="categoryId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {categories.map((category: any) => (
-                                  <SelectItem key={category.id} value={category.id}>
-                                    <div className="flex items-center gap-2">
-                                      <span>{category.icon}</span>
-                                      <span>{category.name}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Budget Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Monthly Groceries" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="period"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Time Period</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select period" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="daily">Daily</SelectItem>
-                                <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="quarterly">Quarterly</SelectItem>
-                                <SelectItem value="yearly">Yearly</SelectItem>
-                                <SelectItem value="custom">Custom</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="budgetType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Budget Type</FormLabel>
-                            <Select onValueChange={(value) => {
-                              field.onChange(value);
-                              setCurrentBudgetType(value);
-                            }} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select budget type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="category">Category Budget</SelectItem>
-                                <SelectItem value="detailed">Detailed Item Budget</SelectItem>
-                                <SelectItem value="mixed">Mixed Budget</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="amount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Budget Amount</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" placeholder="500.00" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description (Optional)</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Budget description..." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="alertThreshold"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Alert Threshold (%)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="1" max="100" placeholder="80" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex gap-2 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsCreateOpen(false)}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={createBudgetMutation.isPending || updateBudgetMutation.isPending}
-                          className="flex-1"
-                        >
-                          {createBudgetMutation.isPending || updateBudgetMutation.isPending
-                            ? "Saving..."
-                            : editingBudget
-                            ? "Update Budget"
-                            : "Create Budget"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                onClick={() => {
+                  setEditingBudget(null);
+                  form.reset();
+                  setIsCreateOpen(true);
+                }} 
+                className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px] text-sm md:text-base"
+              >
+                <Plus className="w-4 h-4" />
+                Create Budget
+              </Button>
             </div>
-
-            {/* Budget Overview Cards */}
-            {budgetsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardContent className="p-6">
-                      <div className="animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-                        <div className="h-2 bg-gray-200 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : Array.isArray(budgets) && budgets.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {budgets && budgets.map((budget: any) => {
-                  const { status, color } = getBudgetStatus(budget);
-                  const amount = parseFloat(budget.amount || 0);
-                  const percentage = amount > 0 ? Math.min((budget.spent / amount) * 100, 100) : 0;
+            
+            {/* Budget List - Mobile Optimized */}
+            <div className="space-y-4">
+              {budgetsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+                </div>
+              ) : budgets.length === 0 ? (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <div className="mb-4">
+                      <PiggyBank className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No budgets yet</h3>
+                      <p className="text-gray-500 mb-4">Start managing your finances by creating your first budget</p>
+                      <Button onClick={() => setIsCreateOpen(true)} className="min-h-[44px]">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Your First Budget
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                budgets.map((budget: any) => {
+                  const status = getBudgetStatus(budget);
+                  const progressPercentage = budget.amount > 0 ? Math.min(((budget.spent || 0) / parseFloat(budget.amount)) * 100, 100) : 0;
                   
                   return (
-                    <Card key={budget.id} className="relative">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{budget.category?.icon}</span>
-                            <div>
-                              <CardTitle className="text-lg">{budget.name || budget.category?.name}</CardTitle>
-                              {budget.budgetType !== "category" && (
-                                <div className="text-xs text-gray-500 capitalize">{budget.budgetType} Budget</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(budget)}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(budget.id)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="text-sm text-gray-500 capitalize">{budget.period}</div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-2xl font-bold">${budget.spent?.toFixed(2) || "0.00"}</span>
-                            <span className="text-gray-500">of ${amount.toFixed(2)}</span>
-                          </div>
-                          
-                          <Progress value={percentage} className="h-2" />
-                          
-                          <div className="flex justify-between items-center text-sm">
-                            <div className="flex gap-4">
-                              <span className={`${
-                                status === "over" ? "text-red-600" :
-                                status === "warning" ? "text-yellow-600" : "text-green-600"
-                              }`}>
-                                {percentage.toFixed(1)}% used
+                    <Card key={budget.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-lg flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                              <span className="truncate">{budget.name}</span>
+                              <Badge 
+                                variant={status.status === "good" ? "default" : status.status === "warning" ? "secondary" : "destructive"}
+                                className="text-xs self-start sm:self-center"
+                              >
+                                {status.status === "good" ? "On Track" : status.status === "warning" ? "Warning" : "Over Budget"}
+                              </Badge>
+                            </CardTitle>
+                            {budget.description && (
+                              <p className="text-sm text-gray-500 mb-2">{budget.description}</p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs">
+                              <span className="bg-gray-100 px-2 py-1 rounded-full">
+                                {budget.period.charAt(0).toUpperCase() + budget.period.slice(1)}
                               </span>
-                              <span className="text-gray-500">
-                                ${(parseFloat(budget.amount || 0) - (budget.spent || 0)).toFixed(2)} left
+                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                {budget.budgetType === "category" ? "Category" : budget.budgetType === "detailed" ? "Item-Level" : "Mixed"}
                               </span>
                             </div>
                           </div>
-                          
-                          {status === "over" && (
-                            <div className="flex items-center gap-2 text-red-600 text-sm">
-                              <AlertTriangle className="w-4 h-4" />
-                              Budget exceeded
-                            </div>
-                          )}
-                          
-                          {status === "warning" && (
-                            <div className="flex items-center gap-2 text-yellow-600 text-sm">
-                              <AlertTriangle className="w-4 h-4" />
-                              Near budget limit
-                            </div>
-                          )}
-
-                          {(budget.budgetType === "detailed" || budget.budgetType === "mixed") && (
+                          <div className="flex flex-row sm:flex-col gap-2 min-w-0">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full"
-                              onClick={() => setSelectedBudget(budget)}
+                              onClick={() => handleEdit(budget)}
+                              className="flex-1 sm:flex-none min-h-[36px] text-xs"
                             >
-                              Manage Items
+                              <Edit className="w-3 h-3 mr-1" />
+                              Edit
                             </Button>
-                          )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(budget.id)}
+                              className="flex-1 sm:flex-none min-h-[36px] text-xs text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
+                      </CardHeader>
+                      
+                      <CardContent className="pt-0">
+                        {/* Budget Progress */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600">Budget Progress</span>
+                            <span className="font-medium">
+                              ${(budget.spent || 0).toFixed(2)} / ${parseFloat(budget.amount || 0).toFixed(2)}
+                            </span>
+                          </div>
+                          
+                          <Progress 
+                            value={progressPercentage} 
+                            className="h-2"
+                          />
+                          
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{progressPercentage.toFixed(1)}% used</span>
+                            <span>
+                              {progressPercentage < 100 
+                                ? `$${(parseFloat(budget.amount || 0) - (budget.spent || 0)).toFixed(2)} remaining`
+                                : `$${((budget.spent || 0) - parseFloat(budget.amount || 0)).toFixed(2)} over budget`
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Item-level budgeting actions */}
+                        {(budget.budgetType === "detailed" || budget.budgetType === "mixed") && (
+                          <div className="mt-4 pt-3 border-t">
+                            <Button
+                              variant="outline"
+                              onClick={() => setSelectedBudget(budget)}
+                              className="w-full min-h-[44px] text-sm"
+                            >
+                              <Package className="w-4 h-4 mr-2" />
+                              Manage Items ({budget.itemCount || 0})
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
-                })}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No budgets yet</h3>
-                  <p className="text-gray-500 mb-4">
-                    Create your first budget to start tracking your spending limits.
-                  </p>
-                  <Button onClick={() => setIsCreateOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Budget
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+                })
+              )}
+            </div>
           </div>
         </main>
       </div>
-
-      {/* Budget Item Management Dialog */}
-      {selectedBudget && (
-        <Dialog open={!!selectedBudget} onOpenChange={() => setSelectedBudget(null)}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>
-                Manage Items - {selectedBudget.name}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <BudgetItemManager
-              budget={selectedBudget}
-              onAddItem={() => {
-                setEditingItem(null);
-                itemForm.reset();
-                setIsItemDialogOpen(true);
-              }}
-              onEditItem={(item) => {
-                setEditingItem(item);
-                itemForm.setValue("name", item.name || "");
-                itemForm.setValue("description", item.description || "");
-                itemForm.setValue("unit", item.unit || "items");
-                itemForm.setValue("plannedQuantity", item.plannedQuantity?.toString() || "1");
-                itemForm.setValue("plannedUnitPrice", item.plannedUnitPrice?.toString() || "");
-                itemForm.setValue("plannedAmount", item.plannedAmount?.toString() || "");
-                setIsItemDialogOpen(true);
-              }}
-              onRecordPurchase={(item) => {
-                setEditingItem(item);
-                setIsPurchaseDialogOpen(true);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Item Creation/Edit Dialog */}
-      <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      
+      {/* Create/Edit Budget Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? "Edit Item" : "Add Budget Item"}
+              {editingBudget ? "Edit Budget" : "Create New Budget"}
             </DialogTitle>
           </DialogHeader>
           
-          <Form {...itemForm}>
-            <form onSubmit={itemForm.handleSubmit(onItemSubmit)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
-                control={itemForm.control}
+                control={form.control}
+                name="walletId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Wallet</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="min-h-[44px]">
+                          <SelectValue placeholder="Select a wallet" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wallets.map((wallet: any) => (
+                          <SelectItem key={wallet.id} value={wallet.id}>
+                            {wallet.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="min-h-[44px]">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Name</FormLabel>
+                    <FormLabel>Budget Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Milk" {...field} />
+                      <Input placeholder="Monthly Groceries" {...field} className="min-h-[44px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -717,57 +474,64 @@ export default function Budgets() {
               />
 
               <FormField
-                control={itemForm.control}
-                name="unit"
+                control={form.control}
+                name="period"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., gallons, items, kg" {...field} />
-                    </FormControl>
+                    <FormLabel>Period</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="min-h-[44px]">
+                          <SelectValue placeholder="Select period" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={itemForm.control}
-                  name="plannedQuantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Planned Quantity</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.1" placeholder="2" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={itemForm.control}
-                  name="plannedUnitPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit Price</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" placeholder="3.99" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
-                control={itemForm.control}
-                name="plannedAmount"
+                control={form.control}
+                name="budgetType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Planned Amount</FormLabel>
+                    <FormLabel>Budget Type</FormLabel>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      setCurrentBudgetType(value);
+                    }} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="min-h-[44px]">
+                          <SelectValue placeholder="Select budget type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="category">Category Budget</SelectItem>
+                        <SelectItem value="detailed">Detailed Item Budget</SelectItem>
+                        <SelectItem value="mixed">Mixed Budget</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget Amount</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="7.98" {...field} />
+                      <Input type="number" step="0.01" placeholder="500.00" {...field} className="min-h-[44px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -775,13 +539,27 @@ export default function Budgets() {
               />
 
               <FormField
-                control={itemForm.control}
+                control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Additional notes..." {...field} />
+                      <Textarea placeholder="Budget description..." {...field} className="min-h-[80px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="alertThreshold"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alert Threshold (%)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" max="100" placeholder="80" {...field} className="min-h-[44px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -792,21 +570,21 @@ export default function Budgets() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsItemDialogOpen(false)}
-                  className="flex-1"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="flex-1 min-h-[44px]"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createItemMutation.isPending || updateItemMutation.isPending}
-                  className="flex-1"
+                  disabled={createBudgetMutation.isPending || updateBudgetMutation.isPending}
+                  className="flex-1 min-h-[44px]"
                 >
-                  {createItemMutation.isPending || updateItemMutation.isPending
+                  {createBudgetMutation.isPending || updateBudgetMutation.isPending
                     ? "Saving..."
-                    : editingItem
-                    ? "Update Item"
-                    : "Add Item"}
+                    : editingBudget
+                    ? "Update Budget"
+                    : "Create Budget"}
                 </Button>
               </div>
             </form>
@@ -814,30 +592,31 @@ export default function Budgets() {
         </DialogContent>
       </Dialog>
 
-      {/* Purchase Recording Dialog */}
-      <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Record Purchase - {editingItem?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <PurchaseForm 
-            item={editingItem}
-            onSubmit={(purchase) => {
-              if (editingItem) {
-                updatePurchaseMutation.mutate({ itemId: editingItem.id, purchase });
-              }
-            }}
-            onCancel={() => {
-              setIsPurchaseDialogOpen(false);
-              setEditingItem(null);
-            }}
-            isLoading={updatePurchaseMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Budget Item Management Dialog */}
+      {selectedBudget && (
+        <Dialog open={!!selectedBudget} onOpenChange={() => setSelectedBudget(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Manage Items - {selectedBudget.name}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <BudgetItemManager
+              budget={selectedBudget}
+              onAddItem={() => {
+                // Handle add item
+              }}
+              onEditItem={(item) => {
+                // Handle edit item
+              }}
+              onRecordPurchase={(item) => {
+                // Handle record purchase
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
