@@ -67,7 +67,7 @@ export default function Settings() {
 
   const createCategoryMutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
-      const response = await apiRequest('POST', '/api/categories', data);
+      const response = await apiRequest('/api/categories', 'POST', data);
       return response.json();
     },
     onSuccess: () => {
@@ -101,7 +101,7 @@ export default function Settings() {
 
   const seedCategoriesMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/seed-categories', {});
+      const response = await apiRequest('/api/seed-categories', 'POST', {});
       return response.json();
     },
     onSuccess: () => {
@@ -133,7 +133,7 @@ export default function Settings() {
 
   const resetProfileMutation = useMutation({
     mutationFn: async (confirmationText: string) => {
-      const response = await apiRequest('POST', '/api/users/me/reset', {
+      const response = await apiRequest('/api/users/me/reset', 'POST', {
         confirmationText,
       });
       return response.json();
