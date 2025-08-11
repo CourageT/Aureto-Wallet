@@ -144,14 +144,14 @@ export default function Transactions() {
             <TopBar title="Transactions" subtitle="View and manage all your financial transactions" />
           </div>
           
-          <div className="p-4 md:p-6 pt-20 md:pt-6 pb-24 md:pb-6">
+          <div className="p-3 md:p-6 pt-16 md:pt-6 pb-24 md:pb-6">
             {/* Filters and Search */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Filter Transactions</CardTitle>
+            <Card className="mb-4 md:mb-6">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-lg md:text-xl">Filter Transactions</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                     <Input
@@ -198,10 +198,11 @@ export default function Transactions() {
                   <div className="flex items-end">
                     <Button
                       onClick={() => setIsAddTransactionOpen(true)}
-                      className="btn-primary w-full"
+                      className="btn-primary w-full text-sm md:text-base"
                     >
                       <i className="fas fa-plus text-sm mr-2"></i>
-                      Add Transaction
+                      <span className="hidden sm:inline">Add Transaction</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   </div>
                 </div>
@@ -266,48 +267,81 @@ export default function Transactions() {
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2 md:space-y-3">
                     {filteredTransactions.map((transaction: any) => {
                       const color = getCategoryColor(transaction.category?.name || 'Miscellaneous');
                       const icon = getCategoryIcon(transaction.category?.name || 'Miscellaneous');
                       
                       return (
-                        <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center space-x-4">
-                            <div className={`w-12 h-12 bg-${color}-100 rounded-lg flex items-center justify-center`}>
-                              <i className={`${icon} text-${color}-600`}></i>
+                        <div key={transaction.id} className="flex items-start justify-between p-3 md:p-4 bg-white md:bg-gray-50 rounded-lg border md:border-0 hover:bg-gray-100 transition-colors shadow-sm md:shadow-none">
+                          <div className="flex items-start space-x-3 flex-1 min-w-0">
+                            {/* Category Icon with emoji fallback */}
+                            <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <span className="text-lg md:text-xl">
+                                {transaction.category?.icon || '📋'}
+                              </span>
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3">
-                                <p className="font-medium text-gray-900">
-                                  {transaction.description || 'Transaction'}
-                                </p>
-                                <Badge variant="secondary" className="text-xs">
-                                  {transaction.wallet?.name}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center space-x-3 mt-1">
-                                <p className="text-sm text-gray-500">{transaction.category?.name}</p>
-                                <span className="text-gray-300">•</span>
-                                <p className="text-sm text-gray-500">
-                                  {new Date(transaction.date).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </p>
-                                <span className="text-gray-300">•</span>
-                                <p className="text-sm text-gray-500">
-                                  by {transaction.creator?.firstName || transaction.creator?.email}
-                                </p>
+                            
+                            <div className="flex-1 min-w-0">
+                              {/* Main content */}
+                              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-medium text-gray-900 text-sm md:text-base truncate">
+                                    {transaction.description || 'Transaction'}
+                                  </h3>
+                                  
+                                  {/* Mobile: Stack info vertically */}
+                                  <div className="mt-1 space-y-1 md:hidden">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs text-gray-500">{transaction.category?.name}</span>
+                                      <span className="text-gray-300">•</span>
+                                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                                        {transaction.wallet?.name}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                      <span>
+                                        {new Date(transaction.date).toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })}
+                                      </span>
+                                      <span className="text-gray-300">•</span>
+                                      <span>by {transaction.creator?.firstName || 'User'}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Desktop: Horizontal layout */}
+                                  <div className="hidden md:flex items-center space-x-3 mt-1">
+                                    <p className="text-sm text-gray-500">{transaction.category?.name}</p>
+                                    <span className="text-gray-300">•</span>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {transaction.wallet?.name}
+                                    </Badge>
+                                    <span className="text-gray-300">•</span>
+                                    <p className="text-sm text-gray-500">
+                                      {new Date(transaction.date).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                      })}
+                                    </p>
+                                    <span className="text-gray-300">•</span>
+                                    <p className="text-sm text-gray-500">
+                                      by {transaction.creator?.firstName || transaction.creator?.email}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className={`text-lg font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          
+                          {/* Amount - right aligned */}
+                          <div className="text-right flex-shrink-0 ml-3">
+                            <p className={`text-base md:text-lg font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                               {transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
-                            <p className="text-sm text-gray-500 capitalize">
+                            <p className="text-xs md:text-sm text-gray-500 capitalize">
                               {transaction.type}
                             </p>
                           </div>

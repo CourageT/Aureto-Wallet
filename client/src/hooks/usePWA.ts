@@ -18,12 +18,12 @@ export function usePWA() {
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
-    console.log('PWA: Checking install status - standalone:', isStandalone, 'iOS:', isInWebAppiOS);
+
     setIsInstalled(isStandalone || isInWebAppiOS);
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('PWA: beforeinstallprompt event fired');
+
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
