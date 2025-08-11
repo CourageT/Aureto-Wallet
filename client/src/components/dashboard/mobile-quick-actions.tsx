@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowUpDown, Target, Users, Wallet } from 'lucide-react';
+import { Plus, ArrowUpDown, Target, Wallet } from 'lucide-react';
 import AddTransactionModal from '@/components/modals/add-transaction-modal';
 import CreateWalletModal from '@/components/modals/create-wallet-modal';
 
@@ -53,10 +53,12 @@ export default function MobileQuickActions() {
         setIsCreateWalletOpen(true);
         break;
       case 'transfer':
-        // Handle transfer action
+        // TODO: Implement transfer between wallets
+        console.log('Transfer functionality coming soon');
         break;
       case 'set-goal':
-        // Handle set goal action
+        // Navigate to goals page
+        window.location.href = '/goals';
         break;
     }
   };
@@ -77,16 +79,17 @@ export default function MobileQuickActions() {
                   key={action.id}
                   variant="ghost"
                   className={`
-                    h-auto p-4 flex flex-col gap-2 touch-friendly
+                    h-auto p-4 flex flex-col items-center justify-center gap-2 
                     ${action.color} ${action.hoverColor} text-white
-                    hover:text-white border-0
+                    hover:text-white border-0 rounded-lg
+                    min-h-[100px] aspect-square
                   `}
                   onClick={() => handleActionClick(action.id)}
                 >
-                  <Icon className="h-6 w-6" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium">{action.title}</p>
-                    <p className="text-xs opacity-90">{action.description}</p>
+                  <Icon className="h-7 w-7 flex-shrink-0" />
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-semibold leading-tight">{action.title}</p>
+                    <p className="text-xs opacity-90 leading-tight line-clamp-2">{action.description}</p>
                   </div>
                 </Button>
               );
