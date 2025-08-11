@@ -291,12 +291,13 @@ export default function Settings() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-center md:justify-end">
+                    <div className="flex justify-center md:justify-end mt-4">
                       <Button
                         onClick={() => setShowResetDialog(true)}
                         variant="destructive"
                         size="lg"
-                        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 shadow-lg w-full md:w-auto"
+                        className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 shadow-lg w-full md:w-auto min-h-[48px]"
+                        data-testid="reset-profile-button"
                       >
                         <i className="fas fa-trash mr-2"></i>
                         Reset Profile
