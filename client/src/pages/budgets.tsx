@@ -80,17 +80,17 @@ export default function Budgets() {
   });
 
   // Fetch data
-  const { data: budgets = [], isLoading: budgetsLoading } = useQuery({
+  const { data: budgets = [], isLoading: budgetsLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
     enabled: isAuthenticated,
   });
 
-  const { data: wallets = [] } = useQuery({
+  const { data: wallets = [] } = useQuery<any[]>({
     queryKey: ["/api/wallets"],
     enabled: isAuthenticated,
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["/api/categories"],
     enabled: isAuthenticated,
   });
@@ -195,11 +195,54 @@ export default function Budgets() {
     },
   });
 
+  const calculatePeriodDates = (period: string) => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (period) {
+      case 'daily':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1);
+        break;
+      case 'weekly':
+        const dayOfWeek = now.getDay();
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - dayOfWeek);
+        endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 7);
+        break;
+      case 'monthly':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'quarterly':
+        const quarter = Math.floor(now.getMonth() / 3);
+        startDate = new Date(now.getFullYear(), quarter * 3, 1);
+        endDate = new Date(now.getFullYear(), (quarter + 1) * 3, 0);
+        break;
+      case 'yearly':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = new Date(now.getFullYear(), 11, 31);
+        break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
+
+    return { startDate, endDate };
+  };
+
   const onSubmit = (data: BudgetFormData) => {
+    const { startDate, endDate } = calculatePeriodDates(data.period);
+    
     const budgetData = {
       ...data,
       amount: parseFloat(data.amount),
       alertThreshold: data.alertThreshold ? parseInt(data.alertThreshold) : 80,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
     };
 
     if (editingBudget) {
