@@ -1,6 +1,6 @@
 {
-  "name": "SpendWise Pro",
-  "short_name": "SpendWise",
+  "name": "SendWise",
+  "short_name": "SendWise",
   "description": "Collaborative household expense tracking and financial management",
   "start_url": "/",
   "display": "standalone",

@@ -27,7 +27,7 @@ export default function Sidebar() {
             <i className="fas fa-wallet text-white text-lg"></i>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">SpendWise Pro</h1>
+            <h1 className="text-xl font-bold text-gray-900">SendWise</h1>
             <p className="text-sm text-gray-500">Financial Management</p>
           </div>
         </div>

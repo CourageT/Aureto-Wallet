@@ -1,12 +1,27 @@
-# SpendWise Pro
+# SendWise
 
 ## Overview
 
-SpendWise Pro is a mobile-compatible Progressive Web App (PWA) for collaborative financial management, designed for households, families, and teams. It provides comprehensive expense tracking, budget management, and financial analytics through a responsive web application optimized for mobile devices. The system supports multiple wallet types (personal, shared, savings goals) with role-based access control, allowing users to invite team members with different permission levels. Key features include transaction management, category-based expense tracking, budget monitoring, financial reporting, team collaboration tools, and offline functionality through PWA capabilities.
+SendWise (formerly SpendWise Pro) is a mobile-compatible Progressive Web App (PWA) for collaborative financial management, designed for households, families, and teams. It provides comprehensive expense tracking, budget management, and financial analytics through a responsive web application optimized for mobile devices. The system supports multiple wallet types (personal, shared, savings goals) with role-based access control, allowing users to invite team members with different permission levels. Key features include transaction management, category-based expense tracking, budget monitoring, financial reporting, team collaboration tools, and offline functionality through PWA capabilities.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes
+
+### August 11, 2025 - Project Rebranding to SendWise
+- **Enhancement**: Complete project rebranding from SpendWise Pro to SendWise
+- **Changes Made**:
+  - Updated project title and branding across all user-facing components
+  - Modified landing page header to display "SendWise" instead of "SpendWise Pro"
+  - Updated sidebar application name to "SendWise"
+  - Changed PWA manifest.json to reflect new "SendWise" branding
+  - Updated project documentation to reflect the name change
+- **Technical Implementation**:
+  - Maintained all existing functionality while updating visual branding
+  - Preserved backward compatibility for existing users and data
+  - Updated documentation to reflect the new project identity
 
 ## Recent Changes
 

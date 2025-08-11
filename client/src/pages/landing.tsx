@@ -10,7 +10,7 @@ export default function Landing() {
             <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
               <i className="fas fa-wallet text-white text-xl"></i>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900">SpendWise Pro</h1>
+            <h1 className="text-4xl font-bold text-gray-900">SendWise</h1>
           </div>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             The ultimate collaborative financial management platform for households, families, and teams.
