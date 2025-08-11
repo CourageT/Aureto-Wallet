@@ -178,7 +178,9 @@ export default function Budgets() {
         title: "Success",
         description: "Purchase recorded successfully!",
       });
+      // Invalidate both budget items and main budgets cache to update progress display
       queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       setIsPurchaseDialogOpen(false);
       setSelectedItem(null);
     },
@@ -202,6 +204,7 @@ export default function Budgets() {
         description: "Budget item created successfully!",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       setIsItemDialogOpen(false);
       itemForm.reset();
     },
@@ -224,6 +227,7 @@ export default function Budgets() {
         description: "Budget item updated successfully!",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/budgets/${selectedBudget?.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       setIsItemDialogOpen(false);
       setEditingItem(null);
       itemForm.reset();

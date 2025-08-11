@@ -35,6 +35,7 @@ export default function BudgetItemManager({ budget, onAddItem, onEditItem, onRec
         description: "Budget item deleted successfully!",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/budgets/${budget.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
     },
     onError: (error: any) => {
       toast({
