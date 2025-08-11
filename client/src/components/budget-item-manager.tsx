@@ -152,14 +152,14 @@ export default function BudgetItemManager({ budget, onAddItem, onEditItem, onRec
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-500">Planned:</span>
-                          <span className="ml-1 font-medium">${planned.toFixed(2)}</span>
+                          <span className="font-medium">${planned.toFixed(2)}</span>
                         </div>
-                        <div>
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-500">Actual:</span>
-                          <span className={`ml-1 font-medium ${color === "red" ? "text-red-600" : color === "green" ? "text-green-600" : "text-gray-600"}`}>
+                          <span className={`font-medium ${color === "red" ? "text-red-600" : color === "green" ? "text-green-600" : "text-gray-600"}`}>
                             ${actual.toFixed(2)}
                           </span>
                         </div>
