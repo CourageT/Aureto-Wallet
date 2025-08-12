@@ -32,7 +32,7 @@ export default function Goals() {
 
   const createGoalMutation = useMutation({
     mutationFn: async (goalData: Partial<Goal>) => {
-      const response = await apiRequest('POST', '/api/goals', goalData);
+      const response = await apiRequest('/api/goals', 'POST', goalData);
       return response.json();
     },
     onSuccess: () => {

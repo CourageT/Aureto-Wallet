@@ -88,7 +88,7 @@ export default function WalletDetailsModal({ isOpen, onClose, walletId }: Wallet
 
   const inviteMutation = useMutation({
     mutationFn: async (data: { email: string; role: string }) => {
-      const response = await apiRequest('POST', `/api/wallets/${walletId}/invitations`, data);
+      const response = await apiRequest(`/api/wallets/${walletId}/invitations`, 'POST', data);
       return response.json();
     },
     onSuccess: () => {
@@ -120,7 +120,7 @@ export default function WalletDetailsModal({ isOpen, onClose, walletId }: Wallet
 
   const updateRoleMutation = useMutation({
     mutationFn: async (data: { memberId: string; role: string }) => {
-      const response = await apiRequest('PUT', `/api/wallets/${walletId}/members/${data.memberId}`, {
+      const response = await apiRequest(`/api/wallets/${walletId}/members/${data.memberId}`, 'PUT', {
         role: data.role,
       });
       return response.json();
@@ -152,7 +152,7 @@ export default function WalletDetailsModal({ isOpen, onClose, walletId }: Wallet
 
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      await apiRequest('DELETE', `/api/wallets/${walletId}/members/${memberId}`);
+      await apiRequest(`/api/wallets/${walletId}/members/${memberId}`, 'DELETE');
     },
     onSuccess: () => {
       toast({

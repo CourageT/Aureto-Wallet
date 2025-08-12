@@ -42,7 +42,7 @@ export default function Goals() {
 
   const createGoalMutation = useMutation({
     mutationFn: async (goalData: Partial<Goal>) => {
-      const response = await apiRequest('POST', '/api/goals', goalData);
+      const response = await apiRequest('/api/goals', 'POST', goalData);
       return response.json();
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export default function Goals() {
 
   const contributeMutation = useMutation({
     mutationFn: async ({ goalId, amount }: { goalId: string; amount: string }) => {
-      const response = await apiRequest('POST', `/api/goals/${goalId}/contribute`, { amount });
+      const response = await apiRequest(`/api/goals/${goalId}/contribute`, 'POST', { amount });
       return response.json();
     },
     onSuccess: () => {
@@ -107,7 +107,7 @@ export default function Goals() {
 
   const deleteGoalMutation = useMutation({
     mutationFn: async (goalId: string) => {
-      const response = await apiRequest('DELETE', `/api/goals/${goalId}`);
+      const response = await apiRequest(`/api/goals/${goalId}`, 'DELETE');
       return response.json();
     },
     onSuccess: () => {

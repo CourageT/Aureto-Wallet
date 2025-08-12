@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### August 12, 2025 - Critical API Parameter Order Fix
+- **Critical Bug Fix**: Resolved widespread API call parameter order issue affecting all POST/PUT/DELETE operations
+- **Root Cause**: apiRequest function calls had incorrect parameter order (method, url, data) instead of correct (url, method, data)
+- **Impact**: Fixed wallet creation, transaction creation, goal management, team operations, profile reset, and all other API mutations
+- **Files Fixed**:
+  - Fixed 20+ apiRequest calls across settings, wallets, goals, transactions, categories, and team management
+  - Affected files: settings.tsx, create-wallet-modal.tsx, goals.tsx, team.tsx, add-transaction-modal.tsx, and others
+- **Validation**: Profile reset feature now working correctly with confirmation text "delete-all-data-by-courage"
+
 ### August 11, 2025 - Project Rebranding to SendWise
 - **Enhancement**: Complete project rebranding from SpendWise Pro to SendWise
 - **Changes Made**:

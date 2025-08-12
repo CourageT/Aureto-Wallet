@@ -52,7 +52,7 @@ export default function InviteUserModal({ isOpen, onClose, selectedWalletId }: I
 
   const mutation = useMutation({
     mutationFn: async (data: InvitationFormData) => {
-      const response = await apiRequest('POST', `/api/wallets/${data.walletId}/invitations`, {
+      const response = await apiRequest(`/api/wallets/${data.walletId}/invitations`, 'POST', {
         email: data.email,
         role: data.role,
       });

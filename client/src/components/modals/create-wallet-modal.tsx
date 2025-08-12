@@ -64,7 +64,7 @@ export default function CreateWalletModal({ isOpen, onClose }: CreateWalletModal
         }
       }
 
-      const response = await apiRequest('POST', '/api/wallets', walletData);
+      const response = await apiRequest('/api/wallets', 'POST', walletData);
       return response.json();
     },
     onSuccess: () => {

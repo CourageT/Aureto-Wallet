@@ -45,7 +45,7 @@ export default function CreateCategoryModal({
 
   const createCategoryMutation = useMutation({
     mutationFn: async (categoryData: any) => {
-      const response = await apiRequest('POST', '/api/categories', categoryData);
+      const response = await apiRequest('/api/categories', 'POST', categoryData);
       return response.json();
     },
     onSuccess: (newCategory) => {

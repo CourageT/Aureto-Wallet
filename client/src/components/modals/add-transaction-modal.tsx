@@ -62,7 +62,7 @@ export default function AddTransactionModal({ isOpen, onClose, defaultType = 'ex
 
   const mutation = useMutation({
     mutationFn: async (data: TransactionFormData) => {
-      const response = await apiRequest('POST', '/api/transactions', {
+      const response = await apiRequest('/api/transactions', 'POST', {
         ...data,
         amount: data.amount, // Keep as string for now
       });

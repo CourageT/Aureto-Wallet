@@ -74,7 +74,7 @@ export default function Team() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const response = await apiRequest('PUT', `/api/wallets/${selectedWallet}/members/${userId}/role`, { role });
+      const response = await apiRequest(`/api/wallets/${selectedWallet}/members/${userId}/role`, 'PUT', { role });
       return response.json();
     },
     onSuccess: () => {
@@ -107,7 +107,7 @@ export default function Team() {
 
   const removeMemberMutation = useMutation({
     mutationFn: async (userId: string) => {
-      await apiRequest('DELETE', `/api/wallets/${selectedWallet}/members/${userId}`);
+      await apiRequest(`/api/wallets/${selectedWallet}/members/${userId}`, 'DELETE');
     },
     onSuccess: () => {
       toast({
