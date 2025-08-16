@@ -30,6 +30,13 @@ export default function AuthPage() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !isLoading) {
+      window.location.href = "/dashboard";
+    }
+  }, [user, isLoading]);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });

@@ -39,9 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch,
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Always refetch on component mount
   });
 
   const loginMutation = useMutation({
@@ -50,13 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Clear all cache and set fresh user data
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
-      // Refetch user data to ensure session is properly established
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Force immediate refetch
+      refetch();
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
       });
+      // Force navigation after a short delay to ensure state is updated
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -73,13 +83,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Clear all cache and set fresh user data
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
-      // Refetch user data to ensure session is properly established
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Force immediate refetch
+      refetch();
       toast({
         title: "Account created!",
         description: "Welcome to SendWise! Your account has been created successfully.",
       });
+      // Force navigation after a short delay to ensure state is updated
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
