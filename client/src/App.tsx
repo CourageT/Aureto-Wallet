@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import AuthPage from "@/pages/auth-page";
+import HomePage from "@/pages/home-page";
 import Dashboard from "@/pages/dashboard";
 import Wallets from "@/pages/wallets";
 import Transactions from "@/pages/transactions";
@@ -19,10 +20,10 @@ import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-
   return (
     <Switch>
-      <ProtectedRoute path="/" component={Dashboard} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/" component={HomePage} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/wallets" component={Wallets} />
       <ProtectedRoute path="/transactions" component={Transactions} />
@@ -33,7 +34,6 @@ function Router() {
       <ProtectedRoute path="/household-budgets" component={HouseholdBudgets} />
       <ProtectedRoute path="/team" component={Team} />
       <ProtectedRoute path="/settings" component={Settings} />
-      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
