@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
@@ -34,7 +34,7 @@ import html2canvas from "html2canvas";
 
 export default function Reports() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('30');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
@@ -44,22 +44,19 @@ export default function Reports() {
   const [reportType, setReportType] = useState<string>('overview');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "You are logged out. Please sign in again.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [user, isLoading, toast]);
 
   const { data: wallets = [] } = useQuery({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const walletsArray = Array.isArray(wallets) ? wallets : [];
@@ -84,7 +81,7 @@ export default function Reports() {
       if (!response.ok) throw new Error('Failed to fetch summary');
       return response.json();
     },
-    enabled: isAuthenticated && !!selectedWallet,
+    enabled: !!user && !!selectedWallet,
   });
 
   const { data: categorySpending, isLoading: categoryLoading } = useQuery({
@@ -96,7 +93,7 @@ export default function Reports() {
       if (!response.ok) throw new Error('Failed to fetch category spending');
       return response.json();
     },
-    enabled: isAuthenticated && !!selectedWallet,
+    enabled: !!user && !!selectedWallet,
   });
 
   if (isLoading) {
@@ -110,8 +107,8 @@ export default function Reports() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
   }
 
   const selectedWalletName = wallets.find((w: any) => w.id === selectedWallet)?.name || 'Wallet';
@@ -124,7 +121,7 @@ export default function Reports() {
       if (!response.ok) throw new Error('Failed to fetch trends');
       return response.json();
     },
-    enabled: isAuthenticated && !!selectedWallet,
+    enabled: !!user && !!selectedWallet,
   });
 
   const { data: spendingAnalysis, isLoading: analysisLoading } = useQuery({
@@ -134,7 +131,7 @@ export default function Reports() {
       if (!response.ok) throw new Error('Failed to fetch spending analysis');
       return response.json();
     },
-    enabled: isAuthenticated && !!selectedWallet,
+    enabled: !!user && !!selectedWallet,
   });
 
   // Export functions
