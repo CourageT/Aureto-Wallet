@@ -16,7 +16,7 @@ import Reports from "@/pages/reports";
 import Budgets from "@/pages/budgets";
 import HouseholdBudgets from "@/pages/household-budgets";
 import Team from "@/pages/team";
-import Settings from "@/pages/settings";
+import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,7 +33,7 @@ function Router() {
       <ProtectedRoute path="/budgets" component={Budgets} />
       <ProtectedRoute path="/household-budgets" component={HouseholdBudgets} />
       <ProtectedRoute path="/team" component={Team} />
-      <ProtectedRoute path="/settings" component={Settings} />
+      <ProtectedRoute path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

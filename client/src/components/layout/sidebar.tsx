@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -12,7 +12,7 @@ const navigation = [
   { name: "Budgets", href: "/budgets", icon: "fas fa-calculator" },
   { name: "Household Budget", href: "/household-budgets", icon: "fas fa-home" },
   { name: "Team", href: "/team", icon: "fas fa-users" },
-  { name: "Settings", href: "/settings", icon: "fas fa-cog" },
+  { name: "Profile", href: "/profile", icon: "fas fa-user-circle" },
 ];
 
 export default function Sidebar() {
@@ -46,19 +46,20 @@ export default function Sidebar() {
       </nav>
       
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center space-x-3 px-4 py-3">
+        <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
           <img
             src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"}
             alt="User avatar"
             className="w-10 h-10 rounded-full object-cover"
           />
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">
               {(user as any)?.firstName || (user as any)?.email || "User"}
             </p>
             <p className="text-xs text-gray-500">Account Owner</p>
           </div>
-        </div>
+          <i className="fas fa-chevron-right text-gray-400 text-xs"></i>
+        </Link>
       </div>
     </aside>
   );

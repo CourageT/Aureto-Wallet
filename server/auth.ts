@@ -224,7 +224,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  // Get current user
+  // Get current user (legacy endpoint - redirect to new endpoint)
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.sendStatus(401);

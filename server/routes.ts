@@ -531,6 +531,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enhanced User Management Routes
   // Get current user profile with preferences
+  // Enhanced User Management Routes
+  // Get current user profile with preferences
   app.get('/api/users/me', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -549,6 +551,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user profile:", error);
       res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  // Update user profile
+  app.patch('/api/users/me', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const updates = req.body;
+      
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      const { password, id, authProvider, googleId, emailVerified, isActive, createdAt, updatedAt, ...safeUpdates } = updates;
+      
+      const updatedUser = await storage.updateUser(userId, safeUpdates);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = updatedUser;
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update user profile" });
     }
   });
 
