@@ -555,16 +555,16 @@ export default function Settings() {
           {/* Application Information */}
           <Card>
             <CardHeader>
-              <CardTitle>About SendWise</CardTitle>
+              <CardTitle>About Aureto Wallet</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
-                    <i className="fas fa-wallet text-white text-xl"></i>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+                    <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-12 h-12 object-contain" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">SendWise</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Aureto Wallet</h3>
                     <p className="text-sm text-gray-500">Collaborative Financial Management Platform</p>
                   </div>
                 </div>

@@ -29,7 +29,7 @@ export default function InstallPrompt() {
 
           <div className="flex-1 space-y-2">
             <h3 className="text-sm font-semibold text-blue-900">
-              Install SendWise
+              Install Aureto Wallet
             </h3>
             <p className="text-xs text-blue-700">
               For mobile, quick access and offline access. Download the app

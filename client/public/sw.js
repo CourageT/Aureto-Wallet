@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sendwise-v1';
+const CACHE_NAME = 'aureto-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -78,7 +78,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('SendWise', options)
+    self.registration.showNotification('Aureto Wallet', options)
   );
 });
 

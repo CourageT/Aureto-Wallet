@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/users/me"], user);
       toast({
         title: "Account created!",
-        description: "Welcome to SendWise! Your account has been created successfully.",
+        description: "Welcome to Aureto Wallet! Your account has been created successfully.",
       });
     },
     onError: (error: Error) => {

@@ -4,35 +4,16 @@
       <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="wingGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="bodyGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+    <linearGradient id="dollarGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffa500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:1" />
     </linearGradient>
   </defs>
   
   <!-- Background -->
   <rect width="512" height="512" rx="102" fill="url(#bgGradient512)"/>
   
-  <!-- Bird Wings (layered curves) -->
-  <path d="M128 290 Q80 240, 93 200 Q106 160, 146 185 Q128 225, 128 290 Z" fill="url(#wingGradient512)" opacity="0.9"/>
-  <path d="M107 330 Q67 290, 75 265 Q85 240, 112 252 Q107 278, 107 330 Z" fill="url(#wingGradient512)" opacity="0.8"/>
-  <path d="M93 360 Q67 330, 72 312 Q80 295, 93 305 Q93 330, 93 360 Z" fill="url(#wingGradient512)" opacity="0.7"/>
-  
-  <!-- Bird Body -->
-  <ellipse cx="295" cy="290" rx="93" ry="120" fill="url(#bodyGradient512)"/>
-  
-  <!-- Bird Head -->
-  <circle cx="333" cy="225" r="53" fill="url(#bodyGradient512)"/>
-  
-  <!-- Bird Eye -->
-  <circle cx="352" cy="212" r="13" fill="#0ea5e9"/>
-  
-  <!-- Bird Beak -->
-  <path d="M373 218 L 413 208 L 395 233 Z" fill="#f97316"/>
+  <!-- Dollar Sign -->
+  <path d="M256 64 L256 104 Q296 104 328 136 Q360 168 360 208 Q360 224 352 232 L320 232 Q328 216 328 208 Q328 184 304 160 Q280 136 256 136 L256 248 Q296 248 328 280 Q360 312 360 352 Q360 392 328 424 Q296 456 256 456 L256 480 L224 480 L224 456 Q184 456 152 424 Q120 392 120 352 Q120 336 128 328 L160 328 Q152 344 152 352 Q152 376 176 400 Q200 424 224 424 L224 312 Q184 312 152 280 Q120 248 120 208 Q120 168 152 136 Q184 104 224 104 L224 64 Z M224 136 Q200 136 176 160 Q152 184 152 208 Q152 232 176 256 Q200 280 224 280 Z M256 280 Q280 280 304 304 Q328 328 328 352 Q328 376 304 400 Q280 424 256 424 Z" fill="url(#dollarGradient512)"/>
 </svg>

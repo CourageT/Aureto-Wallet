@@ -1,31 +1,19 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="wingGradientFav" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    <linearGradient id="bgGradientFav" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="bodyGradientFav" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+    <linearGradient id="dollarGradientFav" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffa500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:1" />
     </linearGradient>
   </defs>
   
-  <!-- Bird Wings -->
-  <path d="M8 18 Q5 15, 6 12 Q7 10, 9 12 Q8 15, 8 18 Z" fill="url(#wingGradientFav)" opacity="0.9"/>
-  <path d="M7 21 Q4 18, 5 17 Q5 15, 7 16 Q7 18, 7 21 Z" fill="url(#wingGradientFav)" opacity="0.8"/>
-  <path d="M6 23 Q4 22, 5 20 Q5 19, 6 19 Q6 21, 6 23 Z" fill="url(#wingGradientFav)" opacity="0.7"/>
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="url(#bgGradientFav)"/>
   
-  <!-- Bird Body -->
-  <ellipse cx="18" cy="18" rx="6" ry="8" fill="url(#bodyGradientFav)"/>
-  
-  <!-- Bird Head -->
-  <circle cx="21" cy="14" r="3" fill="url(#bodyGradientFav)"/>
-  
-  <!-- Bird Eye -->
-  <circle cx="22" cy="13" r="1" fill="#0ea5e9"/>
-  
-  <!-- Bird Beak -->
-  <path d="M24 14 L 26 13 L 25 15 Z" fill="#f97316"/>
+  <!-- Dollar Sign -->
+  <path d="M16 4 L16 6.5 Q18.5 6.5 20.5 8.5 Q22.5 10.5 22.5 13 Q22.5 14 22 14.5 L20 14.5 Q20.5 13.5 20.5 13 Q20.5 11.5 19 10 Q17.5 8.5 16 8.5 L16 15.5 Q18.5 15.5 20.5 17.5 Q22.5 19.5 22.5 22 Q22.5 24.5 20.5 26.5 Q18.5 28.5 16 28.5 L16 30 L14 30 L14 28.5 Q11.5 28.5 9.5 26.5 Q7.5 24.5 7.5 22 Q7.5 21 8 20.5 L10 20.5 Q9.5 21.5 9.5 22 Q9.5 23.5 11 25 Q12.5 26.5 14 26.5 L14 19.5 Q11.5 19.5 9.5 17.5 Q7.5 15.5 7.5 13 Q7.5 10.5 9.5 8.5 Q11.5 6.5 14 6.5 L14 4 Z M14 8.5 Q12.5 8.5 11 10 Q9.5 11.5 9.5 13 Q9.5 14.5 11 16 Q12.5 17.5 14 17.5 Z M16 17.5 Q17.5 17.5 19 19 Q20.5 20.5 20.5 22 Q20.5 23.5 19 25 Q17.5 26.5 16 26.5 Z" fill="url(#dollarGradientFav)"/>
 </svg>

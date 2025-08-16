@@ -178,7 +178,7 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold">Welcome to SendWise</h1>
+            <h1 className="text-3xl font-bold">Welcome to Aureto Wallet</h1>
             <p className="text-muted-foreground mt-2">
               Your smart financial companion for household expense management
             </p>
