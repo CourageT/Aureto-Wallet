@@ -8,6 +8,22 @@ SendWise (formerly SpendWise Pro) is a mobile-compatible Progressive Web App (PW
 
 Preferred communication style: Simple, everyday language.
 
+## Market Analysis & Strategy
+
+### Target Markets with Strong Demand:
+- **Families with Children (High Priority)**: Need shared expense tracking, allowances, savings goals for kids
+- **Small Business Teams**: Expense reporting, team budgets, receipt management
+- **Roommates/Shared Living**: Split bills, utilities, groceries with fair tracking
+- **Young Professionals**: Personal finance management, savings goals, career-focused budgeting
+- **Couples**: Joint financial planning, shared goals, expense transparency
+
+### Key Pain Points SendWise Solves:
+- Manual expense tracking frustration
+- Lack of family financial collaboration tools
+- Complex budgeting that doesn't adapt to real life
+- No visibility into family spending patterns
+- Difficulty achieving savings goals together
+
 ## Recent Changes
 
 ### August 16, 2025 - Complete Authentication System Implementation
