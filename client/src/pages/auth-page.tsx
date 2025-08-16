@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Redirect } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
@@ -24,6 +24,11 @@ export default function AuthPage() {
     username: "",
   });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -32,6 +37,66 @@ export default function AuthPage() {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  // Form validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6;
+  };
+
+  const validateLoginForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!loginForm.email) {
+      errors.email = "Email is required";
+    } else if (!validateEmail(loginForm.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    if (!loginForm.password) {
+      errors.password = "Password is required";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateRegisterForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!registerForm.firstName) {
+      errors.firstName = "First name is required";
+    }
+    
+    if (!registerForm.lastName) {
+      errors.lastName = "Last name is required";
+    }
+    
+    if (!registerForm.email) {
+      errors.email = "Email is required";
+    } else if (!validateEmail(registerForm.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    if (!registerForm.password) {
+      errors.password = "Password is required";
+    } else if (!validatePassword(registerForm.password)) {
+      errors.password = "Password must be at least 6 characters long";
+    }
+    
+    if (!registerForm.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (registerForm.password !== registerForm.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Redirect if already logged in
   if (user) {
@@ -48,46 +113,52 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginForm.email || !loginForm.password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+    if (!validateLoginForm()) {
       return;
     }
-    loginMutation.mutate(loginForm);
+    loginMutation.mutate({ email: loginForm.email, password: loginForm.password });
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+    if (!validateRegisterForm()) {
       return;
     }
-    if (registerForm.password !== registerForm.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (registerForm.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
+    registerMutation.mutate({
+      email: registerForm.email,
+      password: registerForm.password,
+      firstName: registerForm.firstName,
+      lastName: registerForm.lastName,
+      username: registerForm.username || registerForm.firstName.toLowerCase(),
+    });
+  };
 
-    const { confirmPassword, ...userData } = registerForm;
-    registerMutation.mutate(userData);
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!validateEmail(forgotPasswordEmail)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Simulate password reset (in real app, this would call an API)
+    toast({
+      title: "Password Reset Sent",
+      description: "If an account with that email exists, you'll receive password reset instructions.",
+    });
+    setShowForgotPassword(false);
+    setForgotPasswordEmail("");
   };
 
   const handleGoogleLogin = () => {
@@ -129,26 +200,56 @@ export default function AuthPage() {
                         type="email"
                         placeholder="Enter your email"
                         value={loginForm.email}
-                        onChange={(e) =>
-                          setLoginForm({ ...loginForm, email: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setLoginForm({ ...loginForm, email: e.target.value });
+                          if (formErrors.email) {
+                            setFormErrors({ ...formErrors, email: "" });
+                          }
+                        }}
                         data-testid="input-login-email"
-                        required
+                        className={formErrors.email ? "border-red-500" : ""}
                       />
+                      {formErrors.email && (
+                        <p className="text-sm text-red-500">{formErrors.email}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={loginForm.password}
-                        onChange={(e) =>
-                          setLoginForm({ ...loginForm, password: e.target.value })
-                        }
-                        data-testid="input-login-password"
-                        required
-                      />
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password">Password</Label>
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="login-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={loginForm.password}
+                          onChange={(e) => {
+                            setLoginForm({ ...loginForm, password: e.target.value });
+                            if (formErrors.password) {
+                              setFormErrors({ ...formErrors, password: "" });
+                            }
+                          }}
+                          data-testid="input-login-password"
+                          className={formErrors.password ? "border-red-500 pr-10" : "pr-10"}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {formErrors.password && (
+                        <p className="text-sm text-red-500">{formErrors.password}</p>
+                      )}
                     </div>
                     <Button
                       type="submit"
@@ -204,6 +305,43 @@ export default function AuthPage() {
                     </svg>
                     Continue with Google
                   </Button>
+
+                  {/* Forgot Password Modal */}
+                  {showForgotPassword && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Reset Password</h3>
+                        <form onSubmit={handleForgotPassword} className="space-y-4">
+                          <div>
+                            <Label htmlFor="forgot-email">Email Address</Label>
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={forgotPasswordEmail}
+                              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="flex gap-3">
+                            <Button type="submit" className="flex-1">
+                              Send Reset Link
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setShowForgotPassword(false);
+                                setForgotPasswordEmail("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -414,10 +552,10 @@ export default function AuthPage() {
             <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-30 animate-ping"></div>
             <div className="absolute -inset-8 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full opacity-20 animate-ping" style={{ animationDelay: '1s' }}></div>
           </div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent mb-6 animate-pulse">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent mb-6 animate-pulse drop-shadow-lg">
             Smart Financial Management
           </h2>
-          <p className="text-lg text-gray-700 dark:text-gray-200 leading-relaxed mb-8">
+          <p className="text-lg text-white dark:text-gray-100 leading-relaxed mb-8 drop-shadow-md font-medium">
             Track expenses, manage budgets, collaborate with family members, and achieve your financial goals with our intelligent household finance platform.
           </p>
           <div className="space-y-4 text-left">
@@ -427,7 +565,7 @@ export default function AuthPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Multi-wallet support for different purposes</span>
+              <span className="text-white dark:text-gray-100 font-medium drop-shadow-md">Multi-wallet support for different purposes</span>
             </div>
             <div className="flex items-center space-x-3 transform hover:scale-105 transition-all duration-300 hover:bg-white/10 rounded-lg p-2" style={{ animationDelay: '0.2s' }}>
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse shadow-lg" style={{ animationDelay: '0.5s' }}>
@@ -435,7 +573,7 @@ export default function AuthPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Team collaboration with role-based access</span>
+              <span className="text-white dark:text-gray-100 font-medium drop-shadow-md">Team collaboration with role-based access</span>
             </div>
             <div className="flex items-center space-x-3 transform hover:scale-105 transition-all duration-300 hover:bg-white/10 rounded-lg p-2" style={{ animationDelay: '0.4s' }}>
               <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center animate-pulse shadow-lg" style={{ animationDelay: '1s' }}>
@@ -443,7 +581,7 @@ export default function AuthPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Advanced budgeting and financial analytics</span>
+              <span className="text-white dark:text-gray-100 font-medium drop-shadow-md">Advanced budgeting and financial analytics</span>
             </div>
           </div>
           
