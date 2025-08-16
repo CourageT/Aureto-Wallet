@@ -55,7 +55,21 @@ export function setupAuth(app: Express) {
       async (email, password, done) => {
         try {
           const user = await storage.getUserByEmail(email);
-          if (!user || user.authProvider !== 'basic' || !user.password) {
+          
+          // If user doesn't exist, return generic error
+          if (!user) {
+            return done(null, false, { message: 'Invalid credentials' });
+          }
+          
+          // If user exists but uses Google OAuth, return helpful message
+          if (user.authProvider === 'google') {
+            return done(null, false, { 
+              message: 'This account is linked to Google. Please sign in with your Google account instead.' 
+            });
+          }
+          
+          // If user exists but doesn't have basic auth setup
+          if (user.authProvider !== 'basic' || !user.password) {
             return done(null, false, { message: 'Invalid credentials' });
           }
           
