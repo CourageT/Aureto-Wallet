@@ -46,7 +46,7 @@ import {
 import { db } from "./db";
 import { eq, and, desc, sql, gte, lte, inArray, isNotNull } from "drizzle-orm";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
+import createMemoryStore from "memorystore";
 
 export interface IStorage {
   // User operations (supports both basic auth and OAuth)
@@ -139,10 +139,10 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
-    const PostgresSessionStore = connectPg(session);
-    this.sessionStore = new PostgresSessionStore({
-      conString: process.env.DATABASE_URL,
-      createTableIfMissing: true,
+    // Use memory store for sessions (simpler setup)
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
     });
   }
 
