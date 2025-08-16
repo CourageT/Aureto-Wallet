@@ -51,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Refetch user data to ensure session is properly established
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -72,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Refetch user data to ensure session is properly established
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Account created!",
         description: "Welcome to SendWise! Your account has been created successfully.",

@@ -31,14 +31,15 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'your-session-secret-key-here',
+    secret: process.env.SESSION_SECRET || 'sendwise-secret-key-development-only',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     store: storage.sessionStore,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false for development
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
     }
   };
 
