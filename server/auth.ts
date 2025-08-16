@@ -94,7 +94,7 @@ export function setupAuth(app: Express) {
           clientID: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           callbackURL: process.env.NODE_ENV === 'production' 
-            ? `${process.env.REPLIT_DEV_DOMAIN}/api/auth/google/callback`
+            ? `${process.env.PRODUCTION_DOMAIN || 'https://cougeon.co.zw'}/api/auth/google/callback`
             : process.env.REPLIT_DEV_DOMAIN 
               ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/google/callback`
               : "/api/auth/google/callback"

@@ -26,6 +26,15 @@ function isAuthenticated(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      service: 'aureto-wallet-backend' 
+    });
+  });
+
   // Setup authentication
   setupAuth(app);
 
