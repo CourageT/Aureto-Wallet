@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { usePWA } from "@/hooks/usePWA";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -50,6 +51,7 @@ type CategoryFormData = z.infer<typeof categorySchema>;
 export default function Profile() {
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
+  const { isInstalled, isInstallable, installApp } = usePWA();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetConfirmationText, setResetConfirmationText] = useState('');
@@ -273,6 +275,22 @@ export default function Profile() {
   const handleResetProfile = () => {
     if (resetConfirmationText === 'delete-all-data-by-courage') {
       resetProfileMutation.mutate(resetConfirmationText);
+    }
+  };
+
+  const handleInstallApp = async () => {
+    const success = await installApp();
+    if (success) {
+      toast({
+        title: "App Installed!",
+        description: "Aureto Wallet has been installed on your device.",
+      });
+    } else {
+      toast({
+        title: "Installation Failed",
+        description: "Unable to install the app. Try again later.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -615,6 +633,61 @@ export default function Profile() {
 
               {/* Advanced Tab */}
               <TabsContent value="advanced" className="space-y-6">
+                {/* Install App Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <i className="fas fa-mobile-alt text-blue-600 mr-2"></i>
+                      Install App
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-8 h-8 object-contain" />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Install Aureto Wallet
+                          </h3>
+                          {isInstalled ? (
+                            <div className="flex items-center space-x-2 text-green-600 mb-2">
+                              <i className="fas fa-check-circle"></i>
+                              <span className="text-sm font-medium">App is already installed</span>
+                            </div>
+                          ) : isInstallable ? (
+                            <div className="mb-2">
+                              <p className="text-sm text-gray-600 mb-3">
+                                Install Aureto Wallet as a native app for quick access, offline functionality, and a better user experience.
+                              </p>
+                              <Button
+                                onClick={handleInstallApp}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                data-testid="install-app-button"
+                              >
+                                <i className="fas fa-download mr-2"></i>
+                                Install App
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500 mb-2">
+                              <p>App installation is not available in this browser or the app is already installed.</p>
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-400 space-y-1">
+                            <p>• Works offline after installation</p>
+                            <p>• Fast loading and native app experience</p>
+                            <p>• Add to home screen and dock</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-red-600">Danger Zone</CardTitle>
