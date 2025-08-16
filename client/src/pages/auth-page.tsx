@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import financialBg from "@assets/generated_images/Financial_dashboard_background_94fa23b9.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -349,8 +350,19 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero section */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 items-center justify-center p-8">
-        <div className="max-w-md text-center">
+      <div 
+        className="hidden lg:flex flex-1 items-center justify-center p-8 relative overflow-hidden"
+        style={{
+          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.1)), url(${financialBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80 dark:from-blue-950/80 dark:to-indigo-950/80"></div>
+        
+        <div className="max-w-md text-center relative z-10">
           <div className="mx-auto mb-8 w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
