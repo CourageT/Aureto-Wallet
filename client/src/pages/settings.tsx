@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
@@ -30,7 +30,7 @@ type CategoryFormData = z.infer<typeof categorySchema>;
 
 export default function Settings() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetConfirmationText, setResetConfirmationText] = useState('');
@@ -46,23 +46,23 @@ export default function Settings() {
     },
   });
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
+  }
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
   });
 
   const createCategoryMutation = useMutation({

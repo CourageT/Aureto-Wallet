@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import MobileNavigation from "@/components/layout/mobile-navigation";
@@ -45,7 +45,7 @@ type BudgetFormData = z.infer<typeof budgetSchema>;
 type BudgetItemFormData = z.infer<typeof budgetItemSchema>;
 
 export default function Budgets() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -86,20 +86,32 @@ export default function Budgets() {
     },
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading budgets...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
+  }
+
   // Fetch data
   const { data: budgets = [], isLoading: budgetsLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
-    enabled: isAuthenticated,
   });
 
   const { data: wallets = [] } = useQuery<any[]>({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
   });
 
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
   });
 
   // Budget Mutations

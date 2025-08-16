@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
@@ -36,28 +36,28 @@ const getRoleDescription = (role: string) => {
 
 export default function Team() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isInviteUserOpen, setIsInviteUserOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading team...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
+  }
 
   const { data: wallets } = useQuery({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
   });
 
   // Set default wallet when wallets load

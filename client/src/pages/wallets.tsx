@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
@@ -41,26 +41,11 @@ const getRoleBadge = (role: string) => {
 
 export default function Wallets() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isCreateWalletOpen, setIsCreateWalletOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
 
   const { data: wallets, isLoading: walletsLoading } = useQuery({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
   });
 
   if (isLoading) {
@@ -74,8 +59,8 @@ export default function Wallets() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
   }
 
   return (
