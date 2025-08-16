@@ -1,8 +1,8 @@
-# SendWise
+# Aureto Wallet
 
 ## Overview
 
-SendWise (formerly SpendWise Pro) is a mobile-compatible Progressive Web App (PWA) for collaborative financial management, designed for households, families, and teams. It provides comprehensive expense tracking, budget management, and financial analytics through a responsive web application optimized for mobile devices. The system supports multiple wallet types (personal, shared, savings goals) with role-based access control, allowing users to invite team members with different permission levels. Key features include transaction management, category-based expense tracking, budget monitoring, financial reporting, team collaboration tools, and offline functionality through PWA capabilities.
+Aureto Wallet is a mobile-compatible Progressive Web App (PWA) for collaborative financial management, designed for households, families, and teams. It provides comprehensive expense tracking, budget management, and financial analytics through a responsive web application optimized for mobile devices. The system supports multiple wallet types (personal, shared, savings goals) with role-based access control, allowing users to invite team members with different permission levels. Key features include transaction management, category-based expense tracking, budget monitoring, financial reporting, team collaboration tools, and offline functionality through PWA capabilities.
 
 ## User Preferences
 
@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Young Professionals**: Personal finance management, savings goals, career-focused budgeting
 - **Couples**: Joint financial planning, shared goals, expense transparency
 
-### Key Pain Points SendWise Solves:
+### Key Pain Points Aureto Wallet Solves:
 - Manual expense tracking frustration
 - Lack of family financial collaboration tools
 - Complex budgeting that doesn't adapt to real life
@@ -144,7 +144,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhancement**: Replaced default wallet-themed PWA icons with custom bird logo branding
 - **Implementation**: Created SVG-based icons in 192x192 and 512x512 sizes based on user-provided bird design
 - **Design**: Modern gradient bird logo with blue-to-purple wings and purple-to-orange body on dark background
-- **Result**: SpendWise Pro now displays custom bird branding across all PWA installations and browser tabs
+- **Result**: Aureto Wallet now displays custom branding across all PWA installations and browser tabs
 
 ## System Architecture
 

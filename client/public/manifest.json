@@ -1,6 +1,6 @@
 {
-  "name": "SendWise",
-  "short_name": "SendWise",
+  "name": "Aureto Wallet",
+  "short_name": "Aureto",
   "description": "Collaborative household expense tracking and financial management",
   "start_url": "/",
   "display": "standalone",
@@ -22,7 +22,7 @@
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/spendwise-logo.png",
+      "src": "/aureto-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

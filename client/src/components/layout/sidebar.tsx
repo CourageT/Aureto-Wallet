@@ -23,11 +23,11 @@ export default function Sidebar() {
     <aside className="w-64 bg-white shadow-lg border-r border-gray-200 hidden lg:flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-            <i className="fas fa-wallet text-white text-lg"></i>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+            <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-10 h-10 object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">SendWise</h1>
+            <h1 className="text-xl font-bold text-gray-900">Aureto Wallet</h1>
             <p className="text-sm text-gray-500">Financial Management</p>
           </div>
         </div>

@@ -7,10 +7,10 @@ export default function Landing() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
-              <i className="fas fa-wallet text-white text-xl"></i>
+            <div className="w-12 h-12 bg-transparent rounded-xl flex items-center justify-center">
+              <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-12 h-12 object-contain" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900">SendWise</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Aureto Wallet</h1>
           </div>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             The ultimate collaborative financial management platform for households, families, and teams.

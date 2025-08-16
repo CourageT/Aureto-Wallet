@@ -40,10 +40,10 @@ export default function MobileNavigation() {
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 mobile-header">
         <div className="flex items-center justify-between px-4 py-3 mobile-safe">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg font-bold">💰</span>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-8 h-8 object-contain" />
             </div>
-            <h1 className="text-lg font-semibold text-gray-900">SendWise</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Aureto Wallet</h1>
           </div>
           
           <Button
@@ -69,12 +69,12 @@ export default function MobileNavigation() {
       <aside className={`mobile-sidebar md:hidden ${!isOpen ? 'closed' : ''}`}>
         <div className="p-4 mobile-header">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-white text-xl">💰</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+              <img src="/aureto-logo.png" alt="Aureto Wallet Logo" className="w-10 h-10 object-contain" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">SendWise</h2>
-              <p className="text-sm text-gray-500">Expense Tracker</p>
+              <h2 className="text-lg font-semibold text-gray-900">Aureto Wallet</h2>
+              <p className="text-sm text-gray-500">Financial Management</p>
             </div>
           </div>
         </div>
