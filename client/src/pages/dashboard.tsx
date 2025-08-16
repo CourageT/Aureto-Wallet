@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
@@ -15,21 +15,7 @@ import TeamManagement from "@/components/dashboard/team-management";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -42,8 +28,8 @@ export default function Dashboard() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
+  if (!user) {
+    return null; // ProtectedRoute will handle the redirect
   }
 
   return (

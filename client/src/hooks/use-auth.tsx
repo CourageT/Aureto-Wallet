@@ -54,19 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      // Clear all cache and set fresh user data
-      queryClient.clear();
+      // Set fresh user data
       queryClient.setQueryData(["/api/user"], user);
-      // Force immediate refetch
-      refetch();
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
       });
-      // Force navigation after a short delay to ensure state is updated
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -83,19 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      // Clear all cache and set fresh user data
-      queryClient.clear();
+      // Set fresh user data
       queryClient.setQueryData(["/api/user"], user);
-      // Force immediate refetch
-      refetch();
       toast({
         title: "Account created!",
         description: "Welcome to SendWise! Your account has been created successfully.",
       });
-      // Force navigation after a short delay to ensure state is updated
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
     },
     onError: (error: Error) => {
       toast({
