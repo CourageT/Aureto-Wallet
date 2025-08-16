@@ -85,7 +85,7 @@ export default function Wallets() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Your Wallets</h3>
                 <p className="text-sm text-gray-500">
-                  {wallets?.length || 0} wallet{(wallets?.length || 0) !== 1 ? 's' : ''} total
+                  {Array.isArray(wallets) ? wallets.length : 0} wallet{(Array.isArray(wallets) ? wallets.length : 0) !== 1 ? 's' : ''} total
                 </p>
               </div>
               <Button
@@ -109,7 +109,7 @@ export default function Wallets() {
                   </Card>
                 ))}
               </div>
-            ) : !wallets || wallets.length === 0 ? (
+            ) : !Array.isArray(wallets) || wallets.length === 0 ? (
               <Card className="text-center py-12">
                 <CardContent>
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -128,7 +128,7 @@ export default function Wallets() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {wallets.map((wallet: any) => {
+                {(Array.isArray(wallets) ? wallets : []).map((wallet: any) => {
                   const icon = getWalletIcon(wallet.type);
                   const iconColor = getWalletIconColor(wallet.type);
                   const userRole = wallet.members?.find((m: any) => m.user)?.role || 'owner';

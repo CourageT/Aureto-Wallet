@@ -77,7 +77,7 @@ export default function Transactions() {
   const walletQueries = useQuery({
     queryKey: ["/api/transactions/all"],
     queryFn: async () => {
-      if (!wallets?.length) return [];
+      if (!Array.isArray(wallets) || !wallets.length) return [];
       
       const allTransactions = [];
       for (const wallet of wallets) {
@@ -95,7 +95,7 @@ export default function Transactions() {
       // Sort by date descending
       return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     },
-    enabled: !!wallets?.length,
+    enabled: Array.isArray(wallets) && wallets.length > 0,
   });
 
   if (isLoading) {
@@ -109,7 +109,7 @@ export default function Transactions() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
@@ -168,7 +168,7 @@ export default function Transactions() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Wallets</SelectItem>
-                        {wallets?.map((wallet: any) => (
+                        {(Array.isArray(wallets) ? wallets : []).map((wallet: any) => (
                           <SelectItem key={wallet.id} value={wallet.id}>
                             {wallet.name}
                           </SelectItem>
@@ -185,7 +185,7 @@ export default function Transactions() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        {categories?.map((category: any) => (
+                        {(Array.isArray(categories) ? categories : []).map((category: any) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>

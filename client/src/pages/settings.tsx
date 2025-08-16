@@ -188,7 +188,7 @@ export default function Settings() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
@@ -196,8 +196,8 @@ export default function Settings() {
     createCategoryMutation.mutate(data);
   };
 
-  const userCategories = (categories as any[])?.filter((cat: any) => !cat.isDefault) || [];
-  const defaultCategories = (categories as any[])?.filter((cat: any) => cat.isDefault) || [];
+  const userCategories = Array.isArray(categories) ? categories.filter((cat: any) => !cat.isDefault) : [];
+  const defaultCategories = Array.isArray(categories) ? categories.filter((cat: any) => cat.isDefault) : [];
 
   return (
     <>

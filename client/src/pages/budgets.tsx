@@ -390,7 +390,7 @@ export default function Budgets() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 

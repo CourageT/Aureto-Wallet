@@ -62,14 +62,14 @@ export default function Team() {
 
   // Set default wallet when wallets load
   useEffect(() => {
-    if (wallets?.length && !selectedWallet) {
+    if (Array.isArray(wallets) && wallets.length && !selectedWallet) {
       setSelectedWallet(wallets[0].id);
     }
   }, [wallets, selectedWallet]);
 
   const { data: members, isLoading: membersLoading } = useQuery({
     queryKey: ["/api/wallets", selectedWallet, "members"],
-    enabled: isAuthenticated && !!selectedWallet,
+    enabled: !!user && !!selectedWallet,
   });
 
   const updateRoleMutation = useMutation({
@@ -148,12 +148,12 @@ export default function Team() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
-  const selectedWalletData = wallets?.find((w: any) => w.id === selectedWallet);
-  const currentUserMember = members?.find((m: any) => m.userId === user?.id);
+  const selectedWalletData = Array.isArray(wallets) ? wallets.find((w: any) => w.id === selectedWallet) : undefined;
+  const currentUserMember = Array.isArray(members) ? members.find((m: any) => m.userId === user?.id) : undefined;
   const canManageMembers = currentUserMember && ['owner', 'manager'].includes(currentUserMember.role);
 
   return (
@@ -188,7 +188,7 @@ export default function Team() {
                         <SelectValue placeholder="Select wallet" />
                       </SelectTrigger>
                       <SelectContent>
-                        {wallets?.map((wallet: any) => (
+                        {(Array.isArray(wallets) ? wallets : []).map((wallet: any) => (
                           <SelectItem key={wallet.id} value={wallet.id}>
                             {wallet.name} ({wallet.members?.length || 0} members)
                           </SelectItem>
@@ -254,7 +254,7 @@ export default function Team() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Team Members ({members?.length || 0})</CardTitle>
+                      <CardTitle>Team Members ({Array.isArray(members) ? members.length : 0})</CardTitle>
                       {canManageMembers && (
                         <Button
                           onClick={() => setIsInviteUserOpen(true)}
@@ -283,7 +283,7 @@ export default function Team() {
                           </div>
                         ))}
                       </div>
-                    ) : !members || members.length === 0 ? (
+                    ) : !Array.isArray(members) || members.length === 0 ? (
                       <div className="text-center py-8">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <i className="fas fa-users text-gray-400 text-xl"></i>

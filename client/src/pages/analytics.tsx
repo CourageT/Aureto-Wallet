@@ -243,9 +243,9 @@ export default function Analytics() {
             <CardContent>
               {loadingBreakdown ? (
                 <div className="text-center py-8">Loading breakdown...</div>
-              ) : categoryBreakdown?.length ? (
+              ) : Array.isArray(categoryBreakdown) && categoryBreakdown.length ? (
                 <div className="space-y-3">
-                  {categoryBreakdown.map((item: any) => (
+                  {(Array.isArray(categoryBreakdown) ? categoryBreakdown : []).map((item: any) => (
                     <div key={item.category} className="flex items-center justify-between p-3 rounded-lg border">
                       <div>
                         <div className="font-medium">{item.category}</div>

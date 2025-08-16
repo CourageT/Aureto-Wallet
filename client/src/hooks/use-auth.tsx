@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch,
   } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/users/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     refetchOnWindowFocus: false,
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       // Set fresh user data
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/users/me"], user);
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       // Set fresh user data
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/users/me"], user);
       toast({
         title: "Account created!",
         description: "Welcome to SendWise! Your account has been created successfully.",
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("/api/logout", "POST");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/users/me"], null);
       queryClient.clear();
       toast({
         title: "Signed out",
