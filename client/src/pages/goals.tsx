@@ -54,7 +54,7 @@ export default function Goals() {
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        setTimeout(() => window.location.href = "/api/login", 500);
+
         return;
       }
       toast({
@@ -85,7 +85,7 @@ export default function Goals() {
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        setTimeout(() => window.location.href = "/api/login", 500);
+
         return;
       }
       toast({
@@ -117,7 +117,7 @@ export default function Goals() {
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        setTimeout(() => window.location.href = "/api/login", 500);
+
         return;
       }
       toast({
@@ -147,7 +147,7 @@ export default function Goals() {
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        setTimeout(() => window.location.href = "/api/login", 500);
+
         return;
       }
       toast({

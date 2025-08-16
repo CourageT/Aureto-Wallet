@@ -36,7 +36,7 @@ type HouseholdBudgetFormData = z.infer<typeof householdBudgetSchema>;
 
 export default function HouseholdBudgets() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -65,32 +65,29 @@ export default function HouseholdBudgets() {
   ];
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "You are logged out. Please sign in again.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [user, isLoading, toast]);
 
   const { data: wallets } = useQuery({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const { data: categories } = useQuery({
     queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const { data: budgets, refetch: refetchBudgets } = useQuery({
     queryKey: ["/api/budgets"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const walletsArray = Array.isArray(wallets) ? wallets : [];
@@ -207,7 +204,7 @@ export default function HouseholdBudgets() {
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!user) return null;
 
   return (
     <>

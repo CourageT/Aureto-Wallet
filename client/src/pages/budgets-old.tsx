@@ -47,7 +47,7 @@ type BudgetItemFormData = z.infer<typeof budgetItemSchema>;
 
 export default function Budgets() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
   const [selectedBudget, setSelectedBudget] = useState<any>(null);
@@ -82,17 +82,17 @@ export default function Budgets() {
   // Fetch data
   const { data: budgets = [], isLoading: budgetsLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const { data: wallets = [] } = useQuery<any[]>({
     queryKey: ["/api/wallets"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   // Mutations
@@ -308,7 +308,7 @@ export default function Budgets() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
