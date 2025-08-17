@@ -1,0 +1,629 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendWise Pro - Financial Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#EFF6FF',
+                            500: '#1E40AF',
+                            600: '#1D4ED8',
+                            700: '#1E3A8A'
+                        },
+                        success: {
+                            50: '#ECFDF5',
+                            500: '#10B981',
+                            600: '#059669'
+                        },
+                        warning: {
+                            500: '#F59E0B'
+                        },
+                        error: {
+                            500: '#EF4444'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- @COMPONENT: MainLayout -->
+    <div class="min-h-screen flex">
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="w-64 bg-white shadow-lg border-r border-gray-200 hidden lg:flex flex-col">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-wallet text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">SpendWise Pro</h1>
+                        <p class="text-sm text-gray-500">Financial Management</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-primary-600 bg-primary-50 rounded-lg font-medium">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-wallet w-5"></i>
+                    <span>Wallets</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-chart-pie w-5"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Team</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3 px-4 py-3">
+                    <!-- Professional headshot of a business person in office attire -->
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="User avatar" class="w-10 h-10 rounded-full object-cover" data-mock="true">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900" data-bind="user.name" data-mock="true">John Smith</p>
+                        <p class="text-xs text-gray-500" data-bind="user.role" data-mock="true">Wallet Owner</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 overflow-auto">
+            <!-- @COMPONENT: TopBar -->
+            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+                            <p class="text-sm text-gray-500">Welcome back! Here's your financial overview.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span class="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full"></span>
+                        </button>
+                        
+                        <button class="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors" data-event="click:addTransaction">
+                            <i class="fas fa-plus text-sm"></i>
+                            <span>Add Transaction</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: TopBar -->
+
+            <!-- @COMPONENT: DashboardContent -->
+            <div class="p-6 space-y-6">
+                <!-- @COMPONENT: StatsCards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Balance</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="totalBalance" data-mock="true">$12,456.78</p>
+                                <p class="text-sm text-success-600 mt-1">
+                                    <i class="fas fa-arrow-up text-xs"></i>
+                                    <span data-mock="true">+5.2% from last month</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-wallet text-primary-500 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Monthly Expenses</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="monthlyExpenses" data-mock="true">$3,892.45</p>
+                                <p class="text-sm text-error-600 mt-1">
+                                    <i class="fas fa-arrow-down text-xs"></i>
+                                    <span data-mock="true">-2.1% from last month</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-error-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-credit-card text-error-500 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Monthly Income</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="monthlyIncome" data-mock="true">$8,500.00</p>
+                                <p class="text-sm text-success-600 mt-1">
+                                    <i class="fas fa-arrow-up text-xs"></i>
+                                    <span data-mock="true">+3.5% from last month</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-success-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-success-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Active Wallets</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="activeWallets" data-mock="true">7</p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <span data-mock="true">3 shared, 4 personal</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-warning-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-layer-group text-warning-500 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: StatsCards -->
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- @COMPONENT: RecentTransactions -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Recent Transactions</h3>
+                                <button class="text-primary-600 hover:text-primary-700 text-sm font-medium">View All</button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 space-y-4">
+                            <!-- @MAP: recentTransactions.map(transaction => ( -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-shopping-cart text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="transaction.description">Grocery Store</p>
+                                        <p class="text-sm text-gray-500" data-bind="transaction.category">Food & Dining</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-red-600" data-bind="transaction.amount">-$156.82</p>
+                                    <p class="text-sm text-gray-500" data-bind="transaction.date">Today, 2:30 PM</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-plus text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="transaction.description">Salary Deposit</p>
+                                        <p class="text-sm text-gray-500" data-bind="transaction.category">Income</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-green-600" data-bind="transaction.amount">+$4,250.00</p>
+                                    <p class="text-sm text-gray-500" data-bind="transaction.date">Yesterday, 9:00 AM</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-gas-pump text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="transaction.description">Gas Station</p>
+                                        <p class="text-sm text-gray-500" data-bind="transaction.category">Transportation</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-red-600" data-bind="transaction.amount">-$67.45</p>
+                                    <p class="text-sm text-gray-500" data-bind="transaction.date">2 days ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-film text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="transaction.description">Netflix Subscription</p>
+                                        <p class="text-sm text-gray-500" data-bind="transaction.category">Entertainment</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-red-600" data-bind="transaction.amount">-$15.99</p>
+                                    <p class="text-sm text-gray-500" data-bind="transaction.date">3 days ago</p>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: RecentTransactions -->
+
+                    <!-- @COMPONENT: QuickActions -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button class="w-full flex items-center space-x-3 p-3 text-left bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors" data-event="click:addIncome">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Add Income</span>
+                                </button>
+                                <button class="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors" data-event="click:addExpense">
+                                    <i class="fas fa-minus-circle"></i>
+                                    <span>Add Expense</span>
+                                </button>
+                                <button class="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors" data-event="click:createWallet">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>Create Wallet</span>
+                                </button>
+                                <button class="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors" data-event="click:inviteUser">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Invite User</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- @COMPONENT: MonthlyBudget -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Budget</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-600">Food & Dining</span>
+                                        <span class="font-medium" data-mock="true">$640 / $800</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-success-500 h-2 rounded-full" style="width: 80%" data-mock="true"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-600">Transportation</span>
+                                        <span class="font-medium" data-mock="true">$320 / $400</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-warning-500 h-2 rounded-full" style="width: 80%" data-mock="true"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-600">Entertainment</span>
+                                        <span class="font-medium" data-mock="true">$180 / $200</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-error-500 h-2 rounded-full" style="width: 90%" data-mock="true"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_COMPONENT: MonthlyBudget -->
+                    </div>
+                    <!-- @END_COMPONENT: QuickActions -->
+                </div>
+
+                <!-- @COMPONENT: WalletsOverview -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">Wallets Overview</h3>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors" data-event="click:createWallet">
+                                <i class="fas fa-plus text-sm"></i>
+                                <span>New Wallet</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- @MAP: wallets.map(wallet => ( -->
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-home text-primary-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900" data-bind="wallet.name">Household Expenses</h4>
+                                            <p class="text-sm text-gray-500" data-bind="wallet.type">Shared Wallet</p>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800" data-bind="wallet.role">Owner</span>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="wallet.balance">$3,456.78</p>
+                                    <p class="text-sm text-gray-500" data-bind="wallet.members">4 members</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:viewWallet">View</button>
+                                    <button class="flex-1 px-3 py-2 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors" data-event="click:manageWallet">Manage</button>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-user text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900" data-bind="wallet.name">Personal Spending</h4>
+                                            <p class="text-sm text-gray-500" data-bind="wallet.type">Personal Wallet</p>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800" data-bind="wallet.role">Owner</span>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="wallet.balance">$1,234.56</p>
+                                    <p class="text-sm text-gray-500" data-bind="wallet.members">1 member</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:viewWallet">View</button>
+                                    <button class="flex-1 px-3 py-2 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors" data-event="click:manageWallet">Manage</button>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-mock="true">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-plane text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900" data-bind="wallet.name">Vacation Fund</h4>
+                                            <p class="text-sm text-gray-500" data-bind="wallet.type">Savings Goal</p>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" data-bind="wallet.role">Contributor</span>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="wallet.balance">$2,890.00</p>
+                                    <p class="text-sm text-gray-500" data-bind="wallet.target">Goal: $5,000</p>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 58%" data-mock="true"></div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:viewWallet">View</button>
+                                    <button class="flex-1 px-3 py-2 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors" data-event="click:contribute">Contribute</button>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: WalletsOverview -->
+
+                <!-- @COMPONENT: TeamManagement -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">Team Members</h3>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors" data-event="click:inviteUser">
+                                <i class="fas fa-user-plus text-sm"></i>
+                                <span>Invite Member</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <!-- @MAP: teamMembers.map(member => ( -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Professional business woman with a friendly smile -->
+                                    <img src="https://pixabay.com/get/g0418a62fe8fdb7ab2bc35043df6d677a0a39fe12da685e09e8cc0a27dbe6a5f2c92629da664c222329b6c3b378a52ba5107545aa339f0ae30fba75bcf27bafcd_1280.jpg" alt="Team member avatar" class="w-12 h-12 rounded-full object-cover" data-bind="member.avatar">
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="member.name">Sarah Johnson</p>
+                                        <p class="text-sm text-gray-500" data-bind="member.email">sarah@example.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-800" data-bind="member.role">Financial Manager</span>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:editMember">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-red-600" data-event="click:removeMember">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Professional business man with confident expression -->
+                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Team member avatar" class="w-12 h-12 rounded-full object-cover" data-bind="member.avatar">
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="member.name">Mike Chen</p>
+                                        <p class="text-sm text-gray-500" data-bind="member.email">mike@example.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" data-bind="member.role">Contributor</span>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:editMember">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-red-600" data-event="click:removeMember">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Professional business person with glasses -->
+                                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Team member avatar" class="w-12 h-12 rounded-full object-cover" data-bind="member.avatar">
+                                    <div>
+                                        <p class="font-medium text-gray-900" data-bind="member.name">Alex Rodriguez</p>
+                                        <p class="text-sm text-gray-500" data-bind="member.email">alex@example.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" data-bind="member.role">Viewer</span>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:editMember">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-red-600" data-event="click:removeMember">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: TeamManagement -->
+            </div>
+            <!-- @END_COMPONENT: DashboardContent -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: MainLayout -->
+
+    <!-- @COMPONENT: AddTransactionModal -->
+    <!-- @STATE: isModalOpen:boolean = false -->
+    <div id="addTransactionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Add Transaction</h3>
+                    <button class="p-2 text-gray-400 hover:text-gray-600" data-event="click:closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <form class="p-6 space-y-4" data-implementation="Should validate form before submission">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option>Income</option>
+                        <option selected>Expense</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                    <input type="number" placeholder="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option>Food & Dining</option>
+                        <option>Transportation</option>
+                        <option>Housing</option>
+                        <option>Entertainment</option>
+                        <option>Healthcare</option>
+                        <option>Personal Care</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Wallet</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option>Household Expenses</option>
+                        <option>Personal Spending</option>
+                        <option>Vacation Fund</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <input type="text" placeholder="Enter description..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-event="click:closeModal">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors" data-event="click:saveTransaction">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddTransactionModal -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Basic modal functionality for demonstration
+            const addTransactionButton = document.querySelector('[data-event="click:addTransaction"]');
+            const modal = document.getElementById('addTransactionModal');
+            const closeModalButtons = document.querySelectorAll('[data-event="click:closeModal"]');
+            
+            if (addTransactionButton && modal) {
+                addTransactionButton.addEventListener('click', function() {
+                    modal.classList.remove('hidden');
+                });
+            }
+            
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    modal.classList.add('hidden');
+                });
+            });
+            
+            // Close modal when clicking outside
+            modal?.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.querySelector('.lg\\:hidden');
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', function() {
+                    // TODO: Implement mobile sidebar toggle
+                    console.log('Mobile menu toggle clicked');
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

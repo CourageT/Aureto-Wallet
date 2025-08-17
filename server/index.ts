@@ -1,6 +1,47 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import fs from "fs";
+
+// Conditional import functions for Vite
+async function setupVite(app: express.Express, server: any) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Vite should not be used in production");
+  }
+  const { setupVite: viteSetup } = await import("./vite");
+  return viteSetup(app, server);
+}
+
+function serveStatic(app: express.Express) {
+  const distPath = path.resolve(process.cwd(), "dist", "public");
+
+  if (!fs.existsSync(distPath)) {
+    throw new Error(
+      `Could not find the build directory: ${distPath}, make sure to build the client first`,
+    );
+  }
+
+  app.use(express.static(distPath));
+
+  // fall through to index.html if the file doesn't exist
+  app.use("*", (_req, res) => {
+    res.sendFile(path.resolve(distPath, "index.html"));
+  });
+}
+
+function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 const app = express();
 app.use(express.json());
@@ -61,11 +102,18 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  if (process.env.NODE_ENV === "production") {
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  } else {
+    // Simplified listen for local development (macOS compatibility)
+    server.listen(port, "127.0.0.1", () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();

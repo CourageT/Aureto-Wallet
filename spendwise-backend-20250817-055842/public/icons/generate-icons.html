@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .icon { margin: 10px; display: inline-block; }
+        canvas { border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>SpendWise Pro PWA Icons</h1>
+    <p>Generated PWA icons for different sizes</p>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#2563eb');
+            gradient.addColorStop(1, '#1d4ed8');
+            
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add border radius effect
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            const radius = size * 0.2;
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Add wallet icon
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💰', size/2, size/2);
+            
+            // Create download link
+            const div = document.createElement('div');
+            div.className = 'icon';
+            div.innerHTML = `
+                <h3>Icon ${size}x${size}</h3>
+                <canvas width="${size}" height="${size}"></canvas><br>
+                <a href="#" onclick="downloadCanvas(this, ${size})" download="icon-${size}x${size}.png">Download</a>
+            `;
+            
+            const targetCanvas = div.querySelector('canvas');
+            targetCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            
+            document.body.appendChild(div);
+        });
+        
+        function downloadCanvas(link, size) {
+            const canvas = link.parentElement.querySelector('canvas');
+            link.href = canvas.toDataURL();
+            link.download = `icon-${size}x${size}.png`;
+        }
+    </script>
+</body>
+</html>
