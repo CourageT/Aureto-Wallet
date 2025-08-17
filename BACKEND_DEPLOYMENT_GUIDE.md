@@ -155,8 +155,8 @@ PORT=5000
 SESSION_SECRET=your_very_secure_session_secret_32_chars_minimum
 
 # Google OAuth Configuration
-GOOGLE_CLIENT_ID=***REMOVED***
-GOOGLE_CLIENT_SECRET=***REMOVED***
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
 
 # Domain Configuration
 PRODUCTION_DOMAIN=https://cougeon.co.zw
